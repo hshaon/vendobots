@@ -1,0 +1,47 @@
+print("Starting FastAPI app...")
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware  # <-- 1. Import this
+from app.routers import robots, inventory, logs
+from app import database, models
+
+try:
+    print("Attempting to create database tables...")
+    models.Base.metadata.create_all(bind=database.engine)
+    print("Database tables checked/created.")
+except Exception as e:
+    print(f"Error creating database tables: {e}")
+
+
+app = FastAPI(title="Vendor Bot API")
+print("FastAPI app instance created.")
+
+
+origins = [
+    "*"  # This means "Allow All"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,       # Allows specific origins
+    allow_credentials=True,
+    allow_methods=["*"],         # Allows all methods (GET, POST, etc.)
+    allow_headers=["*"],         # Allows all headers
+)
+# ----------------------------------------
+
+
+try:
+    # 3. Include your routers *after* adding the middleware
+    app.include_router(robots.router)
+    app.include_router(inventory.router)
+    app.include_router(logs.router)
+    print("Routers imported successfully")
+except Exception as e:
+    print("Error importing routers:", e)
+
+
+# 4. Your root endpoint for testing
+@app.get("/")
+def read_root():
+    return {"message": "Welcome to the Vendor Bot API"}

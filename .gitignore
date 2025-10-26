@@ -1,0 +1,51 @@
+--- Python / FastAPI ---
+
+Virtual Environments
+
+venv/
+*.venv/
+env/
+ENV/
+
+Sensitive Environment Files
+
+.env
+
+Compiled files
+
+*.pyc
+pycache/
+
+IDE / Editor
+
+.idea/
+.vscode/
+
+--- Flutter / Dart ---
+
+Build artifacts
+
+build/
+.dart_tool/
+
+Logs
+
+*.log
+
+IDE / Editor
+
+.idea/
+.vscode/
+*.iml
+*.flutter-plugins
+*.flutter-plugins-dependencies
+
+Sensitive files
+
+*.keystore
+*.jks
+
+--- Operating System ---
+
+.DS_Store
+Thumbs.db
