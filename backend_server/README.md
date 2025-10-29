@@ -82,6 +82,7 @@ CREATE TABLE inventory_items (
   image_url TEXT,
   price DECIMAL(10, 2),
   quantity INT DEFAULT 0,
+  category VARCHAR(100)
   robot_id INT REFERENCES robots(id) ON DELETE SET NULL
 );
 
@@ -93,6 +94,20 @@ CREATE TABLE robot_logs (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+
+-- Table for delivery records (robot actions, deliveries)
+CREATE TABLE delivery_records (
+  id SERIAL PRIMARY KEY,
+  robot_id INT REFERENCES robots(id),
+  address TEXT,
+  status TEXT,
+  message TEXT,
+  inventory_ids TEXT,
+  Quantity TEXT,
+
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  last_updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
 4. Configure Environment
 

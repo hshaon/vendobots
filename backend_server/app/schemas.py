@@ -7,6 +7,7 @@ class InventoryItemBase(BaseModel):
     image_url: Optional[str] = None
     price: Optional[float] = None
     quantity: Optional[int] = 0
+    category: Optional[str] = None
 
 class InventoryItemCreate(InventoryItemBase):
     robot_id: Optional[int] = None
@@ -43,5 +44,25 @@ class RobotLogCreate(RobotLogBase):
 class RobotLog(RobotLogBase):
     id: int
     created_at: datetime
+    class Config:
+        from_attributes = True
+
+
+class DeliveryRecordBase(BaseModel):
+    message: str
+    robot_id: int
+    
+    address: str
+    inventory_ids: str
+    quantity: str
+    status: str
+
+class DeliveryRecordCreate(DeliveryRecordBase):
+    pass
+
+class DeliveryRecord(DeliveryRecordBase):
+    id: int
+    created_at: datetime
+    last_updated_at: datetime
     class Config:
         from_attributes = True

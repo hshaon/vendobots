@@ -24,6 +24,7 @@ class InventoryItem(Base):
     image_url = Column(Text)
     price = Column(DECIMAL(10, 2))
     quantity = Column(Integer, default=0)
+    category = Column(Text)
     robot_id = Column(Integer, ForeignKey("robots.id", ondelete="SET NULL"))
 
     robot = relationship("Robot", back_populates="inventory_items")
@@ -37,3 +38,18 @@ class RobotLog(Base):
     created_at = Column(TIMESTAMP, server_default=func.now())
 
     robot = relationship("Robot", back_populates="logs")
+
+
+class deliveryRecords(Base):
+    __tablename__ = "delivery_records"
+
+    id = Column(Integer, primary_key=True, index=True)
+    robot_id = Column(Integer, ForeignKey("robots.id"))
+    # robot = relationship("Robot", back_populates="logs")
+    message = Column(Text)
+    address = Column(Text)
+    inventory_ids = Column(Text)
+    quantity = Column(Text)
+    status = Column(Text)
+    created_at = Column(TIMESTAMP, server_default=func.now())
+    last_updated_at = Column(TIMESTAMP, server_default=func.now())

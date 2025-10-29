@@ -2,7 +2,7 @@ print("Starting FastAPI app...")
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware  # <-- 1. Import this
-from app.routers import robots, inventory, logs
+from app.routers import robots, inventory, logs, deliveryRecord
 from app import database, models
 
 try:
@@ -36,6 +36,7 @@ try:
     app.include_router(robots.router)
     app.include_router(inventory.router)
     app.include_router(logs.router)
+    app.include_router(deliveryRecord.router)
     print("Routers imported successfully")
 except Exception as e:
     print("Error importing routers:", e)
