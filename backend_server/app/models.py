@@ -50,6 +50,6 @@ class deliveryRecords(Base):
     address = Column(Text)
     inventory_ids = Column(Text)
     quantity = Column(Text)
-    status = Column(Text)
+    status = Column(Text) #DELIVERIED, CANCELED, WAITING,
     created_at = Column(TIMESTAMP, server_default=func.now())
     last_updated_at = Column(TIMESTAMP, server_default=func.now())
