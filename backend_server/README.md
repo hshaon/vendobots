@@ -130,6 +130,7 @@ With your virtual environment still active, run uvicorn:
 
 uvicorn app.main:app --reload
 
+(potentially need to set env variable with $env:DATABASE_URL="postgresql://postgres:102403@127.0.0.1:5432/vendor_bot"; uvicorn app.main:app --reload)
 
 The server is now running! You can view the interactive API documentation at:
 http://127.0.0.1:8000/docs

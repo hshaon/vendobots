@@ -46,7 +46,6 @@ class ApiService {
     }
   }
 
-  // Fetches all inventory items (from GET /inventory)
   Future<List<InventoryItem>> getInventoryItems() async {
     final response = await http.get(Uri.parse('$baseUrl/inventory/'));
 
@@ -58,8 +57,6 @@ class ApiService {
     }
   }
 
-  // --- NEWLY ADDED ---
-  // Fetches all logs (from GET /logs)
   Future<List<RobotLog>> getLogs() async {
     final response = await http.get(Uri.parse('$baseUrl/logs/'));
     if (response.statusCode == 200) {
@@ -67,6 +64,24 @@ class ApiService {
       return jsonResponse.map((log) => RobotLog.fromJson(log)).toList();
     } else {
       throw Exception('Failed to load logs');
+    }
+  }
+
+  Future<Map<String, dynamic>> sendCommand(int robotId, String command) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/control/command'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({
+        'robot_id': robotId,
+        'command': command,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      // Return error message or throw an exception
+      return {'status': 'error', 'message': 'Failed to send command.'};
     }
   }
 }

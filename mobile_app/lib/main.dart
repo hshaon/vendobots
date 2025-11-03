@@ -3,6 +3,7 @@ import 'pages/dashboard_page.dart';
 import 'pages/map_page.dart';
 import 'pages/inventory_page.dart';
 import 'pages/settings_page.dart';
+import 'pages/control_page.dart';
 
 void main() {
   runApp(const VendorBotApp());
@@ -39,6 +40,7 @@ class _MainPageState extends State<MainPage> {
     const DashboardPage(),
     const MapPage(),
     const InventoryPage(),
+    const ControlPage(),
     const SettingsPage(),
   ];
 
@@ -60,6 +62,7 @@ class _MainPageState extends State<MainPage> {
           NavigationDestination(icon: Icon(Icons.dashboard), label: 'Dashboard'),
           NavigationDestination(icon: Icon(Icons.map), label: 'Map'),
           NavigationDestination(icon: Icon(Icons.inventory), label: 'Inventory'),
+          NavigationDestination(icon: Icon(Icons.gamepad), label: 'Control'),
           NavigationDestination(icon: Icon(Icons.settings), label: 'Settings'),
         ],
       ),

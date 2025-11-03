@@ -66,3 +66,11 @@ class DeliveryRecord(DeliveryRecordBase):
     last_updated_at: datetime
     class Config:
         from_attributes = True
+        
+class ControlCommand(BaseModel):
+    robot_id: int
+    command: str  # e.g., "forward", "backward", "left", "right", "stop"
+
+class ControlResponse(BaseModel):
+    status: str
+    message: str
