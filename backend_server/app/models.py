@@ -47,6 +47,7 @@ class deliveryRecords(Base):
     robot_id = Column(Integer, ForeignKey("robots.id"))
     # robot = relationship("Robot", back_populates="logs")
     message = Column(Text)
+    videourl = Column(Text)
     address = Column(Text)
     inventory_ids = Column(Text)
     quantity = Column(Text)

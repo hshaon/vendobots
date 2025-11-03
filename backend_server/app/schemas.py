@@ -53,6 +53,7 @@ class DeliveryRecordBase(BaseModel):
     robot_id: int
     
     address: str
+    videourl: str
     inventory_ids: str
     quantity: str
     status: str

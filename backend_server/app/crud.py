@@ -3,6 +3,7 @@ from . import models, schemas
 import csv
 import os
 from decimal import Decimal
+from datetime import datetime
 
 def get_robots(db: Session):
     return db.query(models.Robot).all()
@@ -89,6 +90,19 @@ def create_delivery_record(db: Session, record: schemas.RobotLogCreate):
     db.commit()
     db.refresh(new_record)
     return new_record
+
+def update_delivery_record_by_robotID(db: Session, record_id: int, video_url: str):
+    record = db.query(models.deliveryRecords).filter(models.deliveryRecords.id == record_id).first()
+    
+    if not record:
+        return None  
+    
+    record.videourl = video_url
+    record.last_updated_at = datetime.utcnow()
+
+    db.commit()
+    db.refresh(record)
+    return record
 
 def get_robots_count(db: Session) -> int:
     """Returns the total number of robots in the database."""

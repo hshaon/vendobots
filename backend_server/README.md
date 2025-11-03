@@ -102,6 +102,7 @@ CREATE TABLE delivery_records (
   address TEXT,
   status TEXT,
   message TEXT,
+  videourl TEXT,
   inventory_ids TEXT,
   Quantity TEXT,
 
