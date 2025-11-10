@@ -2,10 +2,6 @@ from pydantic import BaseModel
 from typing import Optional, List
 from datetime import datetime
 
-class RobotLocationUpdate(BaseModel):
-    x_coord: float
-    y_coord: float
-
 class InventoryItemBase(BaseModel):
     name: str
     image_url: Optional[str] = None
@@ -27,8 +23,6 @@ class RobotBase(BaseModel):
     image_url: Optional[str] = None
     status: Optional[str] = "idle"
     battery_level: Optional[int] = 100
-    x_coord: Optional[float] = 0.0
-    y_coord: Optional[float] = 0.0
 
 class RobotCreate(RobotBase):
     pass
@@ -63,10 +57,6 @@ class DeliveryRecordBase(BaseModel):
     inventory_ids: str
     quantity: str
     status: str
-    start_x: Optional[float] = 0.0
-    start_y: Optional[float] = 0.0
-    dest_x: Optional[float] = 0.0
-    dest_y: Optional[float] = 0.0
 
 class DeliveryRecordCreate(DeliveryRecordBase):
     pass

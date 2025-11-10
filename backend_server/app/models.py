@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, Float, String, Text, ForeignKey, DECIMAL, TIMESTAMP
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, DECIMAL, TIMESTAMP
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from app.database import Base
@@ -12,8 +12,6 @@ class Robot(Base):
     status = Column(String(50), default="idle")
     battery_level = Column(Integer, default=100)
     last_updated = Column(TIMESTAMP, server_default=func.now())
-    x_coord = Column(Float, default=0.0) # Robot's current X coordinate (meters)
-    y_coord = Column(Float, default=0.0) # Robot's current Y coordinate (meters)
 
     inventory_items = relationship("InventoryItem", back_populates="robot")
     logs = relationship("RobotLog", back_populates="robot")
@@ -54,9 +52,5 @@ class deliveryRecords(Base):
     inventory_ids = Column(Text)
     quantity = Column(Text)
     status = Column(Text) #DELIVERIED, CANCELED, WAITING,
-    start_x = Column(Float, default=0.0) # Delivery starting X (meters)
-    start_y = Column(Float, default=0.0) # Delivery starting Y (meters)
-    dest_x = Column(Float, default=0.0)  # Delivery destination X (meters)
-    dest_y = Column(Float, default=0.0)  # Delivery destination Y (meters)
     created_at = Column(TIMESTAMP, server_default=func.now())
     last_updated_at = Column(TIMESTAMP, server_default=func.now())
