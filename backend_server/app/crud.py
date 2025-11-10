@@ -19,6 +19,20 @@ def create_robot(db: Session, robot: schemas.RobotCreate):
     db.refresh(new_robot)
     return new_robot
 
+def update_robot_location(db: Session, robot_id: int, location: schemas.RobotLocationUpdate):
+    """Updates the x and y coordinates of a specific robot."""
+    robot = db.query(models.Robot).filter(models.Robot.id == robot_id).first()
+    
+    if not robot:
+        return None
+
+    robot.x_coord = location.x_coord
+    robot.y_coord = location.y_coord
+    
+    db.commit()
+    db.refresh(robot)
+    return robot
+
 def get_inventory(db: Session):
     return db.query(models.InventoryItem).all()
 
