@@ -23,6 +23,8 @@ class RobotBase(BaseModel):
     image_url: Optional[str] = None
     status: Optional[str] = "idle"
     battery_level: Optional[int] = 100
+    current_pos_x: Optional[float] = 0.0
+    current_pos_y: Optional[float] = 0.0
 
 class RobotCreate(RobotBase):
     pass
@@ -53,10 +55,15 @@ class DeliveryRecordBase(BaseModel):
     robot_id: int
     
     address: str
-    videourl: str
+    videourl: Optional[str] = None
     inventory_ids: str
     quantity: str
     status: str
+    
+    start_pos_x: Optional[float] = None
+    start_pos_y: Optional[float] = None
+    dest_pos_x: Optional[float] = None
+    dest_pos_y: Optional[float] = None
 
 class DeliveryRecordCreate(DeliveryRecordBase):
     pass

@@ -84,7 +84,7 @@ def create_log(db: Session, log: schemas.RobotLogCreate):
     db.refresh(new_log)
     return new_log
 
-def create_delivery_record(db: Session, record: schemas.RobotLogCreate):
+def create_delivery_record(db: Session, record: schemas.DeliveryRecordCreate):
     new_record = models.deliveryRecords(**record.model_dump())
     db.add(new_record)
     db.commit()

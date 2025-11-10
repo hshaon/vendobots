@@ -12,6 +12,9 @@ class Robot(Base):
     status = Column(String(50), default="idle")
     battery_level = Column(Integer, default=100)
     last_updated = Column(TIMESTAMP, server_default=func.now())
+    
+    current_pos_x = Column(DECIMAL(10, 4), default=0.0)
+    current_pos_y = Column(DECIMAL(10, 4), default=0.0)
 
     inventory_items = relationship("InventoryItem", back_populates="robot")
     logs = relationship("RobotLog", back_populates="robot")
@@ -52,5 +55,11 @@ class deliveryRecords(Base):
     inventory_ids = Column(Text)
     quantity = Column(Text)
     status = Column(Text) #DELIVERIED, CANCELED, WAITING,
+    
+    start_pos_x = Column(DECIMAL(10, 4), nullable=True)
+    start_pos_y = Column(DECIMAL(10, 4), nullable=True)
+    dest_pos_x = Column(DECIMAL(10, 4), nullable=True)
+    dest_pos_y = Column(DECIMAL(10, 4), nullable=True)
+    
     created_at = Column(TIMESTAMP, server_default=func.now())
     last_updated_at = Column(TIMESTAMP, server_default=func.now())

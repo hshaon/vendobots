@@ -9,6 +9,9 @@ class Robot {
   final DateTime lastUpdated;
   final List<InventoryItem> inventoryItems;
 
+  final double currentPosX;
+  final double currentPosY;
+
   Robot({
     required this.id,
     required this.name,
@@ -17,6 +20,8 @@ class Robot {
     required this.batteryLevel,
     required this.lastUpdated,
     required this.inventoryItems,
+    required this.currentPosX,
+    required this.currentPosY,
   });
 
   factory Robot.fromJson(Map<String, dynamic> json) {
@@ -32,6 +37,9 @@ class Robot {
       batteryLevel: json['battery_level'],
       lastUpdated: DateTime.parse(json['last_updated']),
       inventoryItems: items,
+
+      currentPosX: (json['current_pos_x'] as num?)?.toDouble() ?? 0.0,
+      currentPosY: (json['current_pos_y'] as num?)?.toDouble() ?? 0.0,
     );
   }
 }

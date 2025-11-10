@@ -4,7 +4,8 @@ import 'package:flutter/foundation.dart' show kIsWeb; // Used to check if runnin
 import 'package:http/http.dart' as http;
 import '../models/robot.dart';
 import '../models/inventory_item.dart';
-import '../models/robot_log.dart'; // We will create this model next
+import '../models/robot_log.dart';
+import '../models/delivery_record.dart';
 
 class ApiService {
   // This 'getter' automatically selects the correct IP address
@@ -82,6 +83,42 @@ class ApiService {
     } else {
       // Return error message or throw an exception
       return {'status': 'error', 'message': 'Failed to send command.'};
+    }
+  }
+
+  Future<DeliveryRecord> createDelivery({
+    required int robotId,
+    required String message,
+    required String address,
+    required String inventoryIds,
+    required String quantity,
+    required String status,
+    double? startX,
+    double? startY,
+    double? destX,
+    double? destY,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/deliveryRecord/'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({
+        'robot_id': robotId,
+        'message': message,
+        'address': address,
+        'inventory_ids': inventoryIds,
+        'quantity': quantity,
+        'status': status,
+        'start_pos_x': startX,
+        'start_pos_y': startY,
+        'dest_pos_x': destX,
+        'dest_pos_y': destY,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      return DeliveryRecord.fromJson(json.decode(response.body));
+    } else {
+      throw Exception('Failed to create delivery record');
     }
   }
 }
