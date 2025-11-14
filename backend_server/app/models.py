@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, ForeignKey, DECIMAL, TIMESTAMP
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, DECIMAL, TIMESTAMP, UniqueConstraint
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from app.database import Base
@@ -61,5 +61,10 @@ class deliveryRecords(Base):
     dest_pos_x = Column(DECIMAL(10, 4), nullable=True)
     dest_pos_y = Column(DECIMAL(10, 4), nullable=True)
     
+    confirmation_code = Column(String(6), nullable=True, index=True)
     created_at = Column(TIMESTAMP, server_default=func.now())
     last_updated_at = Column(TIMESTAMP, server_default=func.now())
+    
+    __table_args__ = (
+        UniqueConstraint('robot_id', 'confirmation_code', 'status', name='_robot_code_status_uc'),
+    )

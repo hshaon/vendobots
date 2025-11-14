@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/robot.dart';
 import '../models/robot_log.dart';
 import '../services/api_service.dart';
+import 'create_order_page.dart'; // Import the new order page
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -20,8 +21,7 @@ class _DashboardPageState extends State<DashboardPage> {
   void initState() {
     super.initState();
     // Start fetching data when the page loads
-    futureRobots = apiService.getRobots();
-    futureLogs = apiService.getLogs();
+    _refreshData();
   }
 
   // Helper to refresh data
@@ -30,9 +30,6 @@ class _DashboardPageState extends State<DashboardPage> {
       futureRobots = apiService.getRobots();
       futureLogs = apiService.getLogs();
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Refreshing data...')),
-    );
   }
 
   @override
@@ -53,7 +50,8 @@ class _DashboardPageState extends State<DashboardPage> {
 
           Color statusColor = (status.toLowerCase() == "idle")
               ? Colors.amber
-              : (status.toLowerCase() == "active" || status.toLowerCase() == "delivering"
+              : (status.toLowerCase() == "active" ||
+                      status.toLowerCase() == "delivering"
                   ? Colors.green
                   : Colors.red);
 
@@ -66,13 +64,15 @@ class _DashboardPageState extends State<DashboardPage> {
                 CircleAvatar(
                   radius: 60,
                   // Use network image if available, otherwise fallback
-                  backgroundImage: (robot.imageUrl != null && robot.imageUrl!.isNotEmpty)
-                      ? NetworkImage(robot.imageUrl!)
-                      : const AssetImage('assets/robot.jpg') as ImageProvider,
+                  backgroundImage:
+                      (robot.imageUrl != null && robot.imageUrl!.isNotEmpty)
+                          ? NetworkImage(robot.imageUrl!)
+                          : null,
                   onBackgroundImageError: (_, __) {},
                   backgroundColor: Colors.grey.shade300,
                   child: (robot.imageUrl == null || robot.imageUrl!.isEmpty)
-                      ? const Icon(Icons.smart_toy, size: 60, color: Colors.white)
+                      ? const Icon(Icons.smart_toy,
+                          size: 60, color: Colors.white)
                       : null,
                 ),
                 const SizedBox(height: 16),
@@ -80,7 +80,10 @@ class _DashboardPageState extends State<DashboardPage> {
                 // --- Robot Name + Status (from API) ---
                 Text(
                   robot.name,
-                  style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontWeight: FontWeight.bold),
+                  style: Theme.of(context)
+                      .textTheme
+                      .headlineSmall!
+                      .copyWith(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 4),
                 Row(
@@ -89,7 +92,10 @@ class _DashboardPageState extends State<DashboardPage> {
                     Icon(Icons.circle, color: statusColor, size: 12),
                     const SizedBox(width: 6),
                     Text("Status: $status",
-                        style: TextStyle(fontSize: 16, color: statusColor, fontWeight: FontWeight.w600)),
+                        style: TextStyle(
+                            fontSize: 16,
+                            color: statusColor,
+                            fontWeight: FontWeight.w600)),
                   ],
                 ),
                 const SizedBox(height: 20),
@@ -116,47 +122,71 @@ class _DashboardPageState extends State<DashboardPage> {
                 ),
                 const SizedBox(height: 30),
 
-                // --- Quick Control Buttons ---
-                Text("Quick Controls",
-                    style: Theme.of(context).textTheme.titleMedium!.copyWith(fontWeight: FontWeight.bold)),
-                const SizedBox(height: 10),
-                Wrap(
-                  spacing: 10,
-                  runSpacing: 10,
-                  alignment: WrapAlignment.center,
-                  children: [
-                    _controlButton(Icons.play_arrow, "Start", Colors.green),
-                    _controlButton(Icons.stop, "Stop", Colors.red),
-                    _controlButton(Icons.home, "Dock", Colors.blue),
-                    _controlButton(Icons.store, "Vendor Mode", Colors.orange),
-                    _controlButton(Icons.warning, "E-Stop", Colors.purple),
-                    // Use the refresh button to re-fetch API data
-                    _controlButton(Icons.refresh, "Refresh", Colors.grey, onPressed: _refreshData),
-                  ],
+                // --- NEW "CREATE ORDER" BUTTON ---
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    icon: const Icon(Icons.shopping_cart_checkout),
+                    label: const Text("Create New Order"),
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      textStyle: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    onPressed: () {
+                      // Navigate to the order page
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => CreateOrderPage(
+                            // Pass the robot object so we know its ID and start position
+                            robot: robot,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
                 ),
+                // --- END NEW BUTTON ---
+
                 const SizedBox(height: 30),
 
                 // --- Activity Log Placeholder (from API) ---
-                Text("Recent Activity",
-                    style: Theme.of(context).textTheme.titleMedium!.copyWith(fontWeight: FontWeight.bold)),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text("Recent Activity",
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleMedium!
+                            .copyWith(fontWeight: FontWeight.bold)),
+                    IconButton(
+                      icon: const Icon(Icons.refresh),
+                      onPressed: _refreshData,
+                      tooltip: "Refresh Data",
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 10),
 
                 // --- This builder waits for the log data ---
                 FutureBuilder<List<RobotLog>>(
                   future: futureLogs,
                   builder: (context, logSnapshot) {
-                    if (logSnapshot.connectionState == ConnectionState.waiting) {
+                    if (logSnapshot.connectionState ==
+                        ConnectionState.waiting) {
                       return const Center(child: CircularProgressIndicator());
                     } else if (logSnapshot.hasError) {
                       return Center(child: Text("Error: ${logSnapshot.error}"));
-                    } else if (logSnapshot.hasData && logSnapshot.data!.isNotEmpty) {
+                    } else if (logSnapshot.hasData &&
+                        logSnapshot.data!.isNotEmpty) {
                       final logs = logSnapshot.data!;
                       return ListView.builder(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
-                        itemCount: logs.length,
+                        itemCount: logs.length > 5 ? 5 : logs.length, // Limit to 5
                         // Show most recent logs first
-                        itemBuilder: (context, index) => _activityCard(logs.reversed.toList()[index].message),
+                        itemBuilder: (context, index) =>
+                            _activityCard(logs.reversed.toList()[index].message),
                       );
                     } else {
                       return _activityCard("No logs found.");
@@ -168,8 +198,19 @@ class _DashboardPageState extends State<DashboardPage> {
           );
         } else {
           // This happens if API returns no robots
-          return const Center(
-            child: Text("No robots found. Make sure your database has at least one robot."),
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text(
+                    "No robots found. Make sure your server is running."),
+                const SizedBox(height: 10),
+                FilledButton(
+                  onPressed: _refreshData,
+                  child: const Text("Retry"),
+                )
+              ],
+            ),
           );
         }
       },
@@ -191,7 +232,10 @@ class _DashboardPageState extends State<DashboardPage> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(color: Colors.grey.withOpacity(0.3), blurRadius: 5, offset: const Offset(0, 3)),
+          BoxShadow(
+              color: Colors.grey.withOpacity(0.3),
+              blurRadius: 5,
+              offset: const Offset(0, 3)),
         ],
       ),
       child: Column(
@@ -200,29 +244,15 @@ class _DashboardPageState extends State<DashboardPage> {
           const SizedBox(height: 8),
           Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
           const SizedBox(height: 4),
-          Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          Text(value,
+              style:
+                  const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           const SizedBox(height: 6),
-          LinearProgressIndicator(value: barValue, color: barColor, backgroundColor: Colors.grey[200]),
+          LinearProgressIndicator(
+              value: barValue,
+              color: barColor,
+              backgroundColor: Colors.grey[200]),
         ],
-      ),
-    );
-  }
-
-  // Helper widget for control buttons (Slight change to add custom onPressed)
-  Widget _controlButton(IconData icon, String label, Color color, {VoidCallback? onPressed}) {
-    return FilledButton.icon(
-      onPressed: onPressed ?? () {
-        // Default action
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$label command sent (Mock)')),
-        );
-      },
-      icon: Icon(icon),
-      label: Text(label),
-      style: FilledButton.styleFrom(
-        backgroundColor: color,
-        foregroundColor: Colors.white,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       ),
     );
   }

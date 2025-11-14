@@ -64,6 +64,8 @@ class DeliveryRecordBase(BaseModel):
     start_pos_y: Optional[float] = None
     dest_pos_x: Optional[float] = None
     dest_pos_y: Optional[float] = None
+    
+    confirmation_code: Optional[str] = None
 
 class DeliveryRecordCreate(DeliveryRecordBase):
     pass

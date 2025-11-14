@@ -4,6 +4,7 @@ import csv
 import os
 from decimal import Decimal
 from datetime import datetime
+import random
 
 def get_robots(db: Session):
     return db.query(models.Robot).all()
@@ -85,7 +86,22 @@ def create_log(db: Session, log: schemas.RobotLogCreate):
     return new_log
 
 def create_delivery_record(db: Session, record: schemas.DeliveryRecordCreate):
-    new_record = models.deliveryRecords(**record.model_dump())
+    while True:
+        code = f"{random.randint(0, 999999):06d}"
+        
+        # Check if this code is already in use for a 'WAITING' order
+        existing = db.query(models.deliveryRecords).filter(
+            models.deliveryRecords.confirmation_code == code,
+            models.deliveryRecords.status == "WAITING"
+        ).first()
+        
+        if not existing:
+            break
+    
+    new_record_data = record.model_dump()
+    new_record_data['confirmation_code'] = code
+    
+    new_record = models.deliveryRecords(**new_record_data)
     db.add(new_record)
     db.commit()
     db.refresh(new_record)

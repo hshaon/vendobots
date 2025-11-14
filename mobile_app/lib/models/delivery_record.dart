@@ -13,6 +13,7 @@ class DeliveryRecord {
   final double? startPosY;
   final double? destPosX;
   final double? destPosY;
+  final String? confirmationCode;
 
   DeliveryRecord({
     required this.id,
@@ -29,6 +30,7 @@ class DeliveryRecord {
     this.startPosY,
     this.destPosX,
     this.destPosY,
+    this.confirmationCode,
   });
 
   factory DeliveryRecord.fromJson(Map<String, dynamic> json) {
@@ -48,6 +50,7 @@ class DeliveryRecord {
       startPosY: (json['start_pos_y'] as num?)?.toDouble(),
       destPosX: (json['dest_pos_x'] as num?)?.toDouble(),
       destPosY: (json['dest_pos_y'] as num?)?.toDouble(),
+      confirmationCode: json['confirmation_code'],
     );
   }
 }
