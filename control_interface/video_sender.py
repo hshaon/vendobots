@@ -3,7 +3,7 @@ import socket
 import numpy as np
 import time
 
-UDP_IP = "192.168.1.44" # IP must match that of the receiver
+UDP_IP = "10.22.50.108" # IP must match that of the receiver
 UDP_PORT = 5005 # Must match the port defined in control_interface.py
 MAX_UDP_PACKET = 65000
 
