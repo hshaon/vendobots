@@ -10,11 +10,12 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtGui import QPixmap, QImage
 from PyQt5.QtCore import Qt, QTimer
 import numpy as np
+import cv2
 
 # --- UDP Video Stream Parameters ---
-UDP_IP = "0.0.0.0"  # Replace with your robot's IP
-UDP_PORT = 5005      # Replace with your robot's UDP port
-BUFFER_SIZE = 65536  # Max buffer size for a UDP packet (can be smaller, up to 65535)
+UDP_IP = "0.0.0.0"
+UDP_PORT = 5005
+BUFFER_SIZE = 65536
 
 class RobotControlInterface(QWidget):
     """
@@ -36,6 +37,7 @@ class RobotControlInterface(QWidget):
         self.video_update_timer.timeout.connect(self.update_video_display)
         self.video_update_timer.start(30) # Update rate in ms (~33 FPS)
         self.latest_frame = None
+        self.latest_frame_bytes = None
 
     def setup_ui(self):
         """Initializes all widgets and layouts."""
@@ -156,7 +158,7 @@ class RobotControlInterface(QWidget):
         self.is_listening = False
         try:
             self.udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            self.udp_socket.settimeout(0.1) # Small timeout for non-blocking operations
+            self.udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         except Exception as e:
             self.log_message(f"Error setting up UDP socket: {e}")
             self.udp_socket = None
@@ -186,7 +188,6 @@ class RobotControlInterface(QWidget):
         """Stops the UDP listener thread."""
         if self.is_listening:
             self.is_listening = False
-            # Wait for the thread to finish (optional but cleaner)
             if self.udp_thread and self.udp_thread.is_alive():
                 self.udp_thread.join(1) # Wait up to 1 second
             self.log_message("Stopped UDP Listener.")
@@ -196,64 +197,78 @@ class RobotControlInterface(QWidget):
 
     def udp_listener(self):
         """Thread function to receive and process UDP video data."""
-        # Note: This is a simplified listener. Real video streams (like MJPEG over UDP)
-        # would require re-assembling multiple packets into a single frame and
-        # decoding, typically using OpenCV (cv2).
         self.log_message("UDP thread running. Waiting for data.")
+        
+        # Buffer to hold the incoming JPEG bytes from the sender
+        self.latest_frame_bytes = None
+
         while self.is_listening:
             try:
-                # Receive a chunk of data
+                # Receive a single packet (expecting a single compressed frame)
                 data, addr = self.udp_socket.recvfrom(BUFFER_SIZE)
-                # In a real scenario, 'data' would be a JPEG/frame chunk.
-                # For this simple mock-up, we'll just log receipt and generate a mock frame.
-                # self.log_message(f"Received {len(data)} bytes from {addr[0]}:{addr[1]}")
-
-                # --- MOCK FRAME GENERATION (Replace with actual frame decoding) ---
+                
                 if len(data) > 0:
-                     # Simulate a 640x480 RGB image (W*H*3 bytes)
-                     mock_data = np.random.randint(0, 256, size=(480, 640, 3), dtype=np.uint8)
-                     # For demonstration, make the mock image change slightly
-                     current_time_ms = int(time.time() * 1000)
-                     mock_data[50:100, 50:100] = (current_time_ms // 100) % 255 # Simple changing block
-                     self.latest_frame = mock_data.tobytes()
-                # --- END MOCK FRAME GENERATION ---
-
+                    # Store the raw bytes received. The GUI thread will handle decoding.
+                    self.latest_frame_bytes = data 
+                
             except socket.timeout:
                 continue
             except Exception as e:
                 if self.is_listening:
                     self.log_message(f"UDP Receive Error: {e}")
-                break # Exit loop on error
+                break
         self.log_message("UDP thread finished.")
 
-
     def update_video_display(self):
-        """Updates the QLabel with the latest received frame."""
-        if self.latest_frame is not None:
-            # --- MOCK FRAME PROCESSING (Replace with actual frame processing) ---
-            # Reconstruct the numpy array from the bytes
-            np_data = np.frombuffer(self.latest_frame, dtype=np.uint8).reshape(480, 640, 3)
+        """Updates the QLabel with the latest received frame by decoding JPEG."""
+        # Use a temporary variable and consume the frame data from the listener thread
+        current_frame_bytes = self.latest_frame_bytes
+        self.latest_frame_bytes = None 
 
-            # Convert numpy array (BGR or RGB, depending on source/decoding) to QImage
-            # Assuming RGB for the mock frame:
-            height, width, channel = np_data.shape
-            bytesPerLine = 3 * width
-            qImg = QImage(np_data.data, width, height, bytesPerLine, QImage.Format_RGB888)
+        if current_frame_bytes is not None:
+            try:
+                # 1. Convert the raw JPEG bytes back into a NumPy array
+                np_buffer = np.frombuffer(current_frame_bytes, dtype=np.uint8)
+                
+                # 2. Decode the JPEG image buffer into a full BGR image array
+                frame = cv2.imdecode(np_buffer, cv2.IMREAD_COLOR)
 
-            # Convert QImage to QPixmap and set it to the label
-            pixmap = QPixmap.fromImage(qImg)
-            self.video_label.setPixmap(pixmap)
-            self.latest_frame = None # Processed and displayed, clear for next frame
-            # --- END MOCK FRAME PROCESSING ---
+                if frame is None:
+                    # This happens if the JPEG buffer is corrupt or incomplete
+                    return
+
+                # Convert the OpenCV image (BGR) to an RGB format needed for QImage
+                rgb_image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                
+                # Convert NumPy array (RGB) to QImage
+                height, width, channel = rgb_image.shape
+                bytesPerLine = 3 * width
+                qImg = QImage(
+                    rgb_image.data, 
+                    width, 
+                    height, 
+                    bytesPerLine, 
+                    QImage.Format_RGB888
+                )
+
+                # Display the image
+                pixmap = QPixmap.fromImage(qImg)
+                scaled_pixmap = pixmap.scaled(
+                    self.video_label.size(), 
+                    Qt.KeepAspectRatio, 
+                    Qt.SmoothTransformation
+                )
+                self.video_label.setPixmap(scaled_pixmap)
+
+            except Exception as e:
+                self.log_message(f"Frame Processing Error: {e}")
 
     # --- Communication/Command Methods ---
 
     def send_command(self, command):
         """Simulates sending a command to the robot and logs it."""
         self.log_message(f"COMMAND SENT: {command}")
-        # In a real application, you would send this command over the network
-        # (e.g., using a separate TCP socket to a robot control server, or UDP)
-        # Example: self.control_socket.sendto(command.encode(), (ROBOT_IP, CONTROL_PORT))
+        # currently just temporary
 
     def log_message(self, message):
         """Appends a message to the log area."""
@@ -264,10 +279,6 @@ class RobotControlInterface(QWidget):
 # --- Main Execution ---
 
 if __name__ == '__main__':
-    # When running a PyQt application, it's best practice to
-    # put the application logic inside a class.
-    # To run this file, save it as control_interface.py and execute:
-    # python control_interface.py
     app = QApplication(sys.argv)
     window = RobotControlInterface()
     window.show()
