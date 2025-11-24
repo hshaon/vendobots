@@ -120,6 +120,34 @@ def update_delivery_record_by_robotID(db: Session, record_id: int, video_url: st
     db.refresh(record)
     return record
 
+def update_delivery_record_after_stop_record(db: Session, text2find: str, video_url: str):
+    
+    record = db.query(models.deliveryRecords).filter(models.deliveryRecords.videourl == text2find).first()
+    
+    if not record:
+        return None  
+    
+    record.videourl = video_url
+    record.last_updated_at = datetime.utcnow()
+
+    db.commit()
+    db.refresh(record)
+    return record
+
+def update_Statisfication_after_stop_record(db: Session, statisfication: str, video_url: str):
+    
+    record = db.query(models.deliveryRecords).filter(models.deliveryRecords.videourl == video_url).first()
+    
+    if not record:
+        return None  
+    
+    record.statisfied_level = statisfication
+    record.last_updated_at = datetime.utcnow()
+
+    db.commit()
+    db.refresh(record)
+    return record
+
 def get_robots_count(db: Session) -> int:
     """Returns the total number of robots in the database."""
     return db.query(models.Robot).count()

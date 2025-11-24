@@ -14,6 +14,34 @@ def get_delivery_record(db: Session = Depends(database.get_db)):
 def create_delivery_record(record: schemas.DeliveryRecordCreate, db: Session = Depends(database.get_db)):
     return crud.create_delivery_record(db, record)
 
+@router.post("/updateVideoURL")
+def update_delivery_record_after_stop_record(body: dict, db: Session = Depends(database.get_db)):
+    
+    received_video_url = body.get("video_url")
+
+    text2find, video_url = received_video_url.split(",", 1)
+    
+    if not video_url:
+        raise HTTPException(status_code=400, detail="Missing 'video_url' in request body")
+
+    updated_record = crud.update_delivery_record_after_stop_record(db,text2find, video_url)
+
+    return updated_record
+
+@router.post("/updateSatistifiedResult")
+def update_Statisfication_after_stop_record(body: dict, db: Session = Depends(database.get_db)):
+    
+    statisfication = body.get("statisfication")
+    video_url = body.get("video_url")
+    
+    if not statisfication:
+        raise HTTPException(status_code=400, detail="Missing 'statisfication' in request body")
+
+    updated_record = crud.update_Statisfication_after_stop_record(db,statisfication, video_url)
+
+    return updated_record
+
+
 @router.get("/{robot_id}", response_model=list[schemas.DeliveryRecord])
 def get_delivery_record_by_robotID(robot_id: int, db: Session = Depends(database.get_db)):
     records = db.query(models.deliveryRecords).filter(models.deliveryRecords.robot_id == robot_id).all()

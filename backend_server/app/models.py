@@ -55,6 +55,7 @@ class deliveryRecords(Base):
     inventory_ids = Column(Text)
     quantity = Column(Text)
     status = Column(Text) #DELIVERIED, CANCELED, WAITING,
+    statisfied_level = Column(Text)
     
     start_pos_x = Column(DECIMAL(10, 4), nullable=True)
     start_pos_y = Column(DECIMAL(10, 4), nullable=True)

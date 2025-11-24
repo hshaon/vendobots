@@ -13,7 +13,7 @@ import numpy as np
 import cv2
 
 # --- UDP Video Stream Parameters ---
-UDP_IP = "0.0.0.0"
+UDP_IP = "10.22.49.84"
 UDP_PORT = 5005
 BUFFER_SIZE = 65536
 
