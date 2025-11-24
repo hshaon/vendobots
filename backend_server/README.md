@@ -72,6 +72,8 @@ CREATE TABLE robots (
   image_url TEXT,
   status VARCHAR(50) DEFAULT 'idle', -- e.g. idle, charging, delivering
   battery_level INT DEFAULT 100,
+  current_pos_x FLOAT,
+  current_pos_y FLOAT,
   last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -106,6 +108,13 @@ CREATE TABLE delivery_records (
   inventory_ids TEXT,
   Quantity TEXT,
 
+  start_pos_x FLOAT,
+  start_pos_y FLOAT,
+  dest_pos_x FLOAT
+  dest_pos_y FLOAT
+
+  confirmation_code TEXT,
+
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   last_updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -130,6 +139,7 @@ Note: The .gitignore file will prevent this file from being uploaded to GitHub.
 With your virtual environment still active, run uvicorn:
 
 uvicorn app.main:app --reload
+uvicorn app.main:app --host 10.8.124.47 --port 8000 --reload
 
 (potentially need to set env variable with $env:DATABASE_URL="postgresql://postgres:102403@127.0.0.1:5432/vendor_bot"; uvicorn app.main:app --reload)
 
