@@ -33,6 +33,8 @@ def update_Statisfication_after_stop_record(body: dict, db: Session = Depends(da
     
     statisfication = body.get("statisfication")
     video_url = body.get("video_url")
+    print(video_url)
+    print(statisfication)
     
     if not statisfication:
         raise HTTPException(status_code=400, detail="Missing 'statisfication' in request body")

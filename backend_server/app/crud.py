@@ -205,9 +205,8 @@ def update_delivery_record_after_stop_record(db: Session, text2find: str, video_
     return record
 
 def update_Statisfication_after_stop_record(db: Session, statisfication: str, video_url: str):
-    
+    print(video_url)
     record = db.query(models.deliveryRecords).filter(models.deliveryRecords.videourl == video_url).first()
-    
     if not record:
         return None  
     
