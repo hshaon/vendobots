@@ -59,6 +59,7 @@ class DeliveryRecordBase(BaseModel):
     inventory_ids: str
     quantity: str
     status: str
+    statisfied_level: Optional[str] = None
     
     start_pos_x: Optional[float] = None
     start_pos_y: Optional[float] = None

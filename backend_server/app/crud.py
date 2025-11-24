@@ -77,6 +77,76 @@ def seed_inventory_from_csv(db: Session):
     except Exception as e:
         db.rollback()
         print(f"ERROR during inventory seeding: {e}")
+        
+
+def get_logs_count(db: Session) -> int:
+    """Returns the total number of logs in the database."""
+    return db.query(models.RobotLog).count()
+
+def seed_logs_from_csv(db: Session):
+    """Reads logdata.csv and seeds the robot_logs table."""
+    
+    # 1. Construct the path (Same location as inventory_items.csv)
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    csv_path = os.path.join(base_dir, 'sampleDataInDB', 'logdata.csv')
+
+    print(f"Attempting to load logs from: {csv_path}")
+
+    try:
+        with open(csv_path, mode='r', newline='', encoding='utf-8') as file:
+            # The file has no headers, so we use standard reader
+            reader = csv.reader(file)
+            
+            logs_to_create = []
+            
+            for row in reader:
+                # Expected format: ID, robot_id, message, timestamp
+                # Example: 34,1,Starting Record,2025-11-11 13:06:13.847743
+                
+                if len(row) < 4:
+                    continue
+
+                try:
+                    # row[0] is the CSV ID (we ignore it and let DB auto-increment new IDs)
+                    robot_id_val = int(row[1])
+                    message_val = row[2]
+                    timestamp_str = row[3]
+                    
+                    # Parse timestamp (matches: 2025-11-11 13:06:13.847743)
+                    # We try specific formats to be safe
+                    try:
+                        timestamp_val = datetime.strptime(timestamp_str, "%Y-%m-%d %H:%M:%S.%f")
+                    except ValueError:
+                        # Fallback for timestamps without microseconds if necessary
+                        timestamp_val = datetime.strptime(timestamp_str, "%Y-%m-%d %H:%M:%S")
+
+                    # Create Model directly (to allow setting created_at manually)
+                    log_entry = models.RobotLog(
+                        robot_id=robot_id_val,
+                        message=message_val,
+                        created_at=timestamp_val
+                    )
+                    logs_to_create.append(log_entry)
+                    
+                except ValueError as e:
+                    print(f"Skipping invalid log row {row}: {e}")
+                    continue
+            
+            # Bulk save is faster for logs
+            if logs_to_create:
+                db.add_all(logs_to_create)
+                db.commit()
+                print(f"Successfully seeded {len(logs_to_create)} log entries.")
+            else:
+                print("No valid logs found to seed.")
+
+    except FileNotFoundError:
+        print(f"ERROR: CSV file not found at {csv_path}. Skipping log seeding.")
+    except Exception as e:
+        db.rollback()
+        print(f"ERROR during log seeding: {e}")
+
+
 
 def create_log(db: Session, log: schemas.RobotLogCreate):
     new_log = models.RobotLog(**log.model_dump())
@@ -114,6 +184,33 @@ def update_delivery_record_by_robotID(db: Session, record_id: int, video_url: st
         return None  
     
     record.videourl = video_url
+    record.last_updated_at = datetime.utcnow()
+
+    db.commit()
+    db.refresh(record)
+    return record
+
+def update_delivery_record_after_stop_record(db: Session, text2find: str, video_url: str):
+    
+    record = db.query(models.deliveryRecords).filter(models.deliveryRecords.videourl == text2find).first()
+    
+    if not record:
+        return None  
+    
+    record.videourl = video_url
+    record.last_updated_at = datetime.utcnow()
+
+    db.commit()
+    db.refresh(record)
+    return record
+
+def update_Statisfication_after_stop_record(db: Session, statisfication: str, video_url: str):
+    print(video_url)
+    record = db.query(models.deliveryRecords).filter(models.deliveryRecords.videourl == video_url).first()
+    if not record:
+        return None  
+    
+    record.statisfied_level = statisfication
     record.last_updated_at = datetime.utcnow()
 
     db.commit()

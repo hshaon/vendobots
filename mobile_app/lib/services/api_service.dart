@@ -10,22 +10,22 @@ import '../models/delivery_record.dart';
 class ApiService {
   // This 'getter' automatically selects the correct IP address
   String get baseUrl {
-    if (kIsWeb) {
-      // Running in a web browser (like Chrome)
-      return "http://127.0.0.1:8000";
-    } else if (Platform.isAndroid) {
-      // Running on an Android Emulator
-      return "http://10.0.2.2:8000";
-    } else if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-      // Running on a PC (Desktop app)
-      return "http://127.0.0.1:8000";
-    } else if (Platform.isIOS) {
-      // Running on an iOS Simulator
-      return "http://127.0.0.1:8000";
-    }
+    // Replace '192.168.1.15' with YOUR computer's actual local IP address
+    const String localServerIp = "10.22.27.115"; 
 
-    // Default fallback (shouldn't be reached)
-    return "http://127.0.0.1:8000";
+    if (kIsWeb) {
+      return "http://localhost:8000"; // Web usually works with localhost if on same machine
+    } else if (Platform.isAndroid) {
+      // If using a REAL device, use the computer's IP. 
+      // If using an emulator, '10.0.2.2' is fine, but real IP works for both.
+      return "http://$localServerIp:8000"; 
+    } else if (Platform.isIOS) {
+      // Physical iOS devices need the computer's IP
+      return "http://$localServerIp:8000";
+    } else {
+      // Fallback for Desktop apps
+      return "http://localhost:8000";
+    }
   }
 
   // --- NOTE ON REAL DEVICES ---
