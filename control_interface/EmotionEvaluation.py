@@ -1,20 +1,20 @@
 import time
-import threading
-
 import os
 import cv2
-import time
 import torch
 import torch.nn as nn
 from torchvision import models
 from torchvision.transforms import transforms
 import mediapipe as mp
 import requests
-import os
+from dotenv import load_dotenv
+
+
+load_dotenv()
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 current_path = os.getcwd()
 print(current_path)
-
 
 class_names = {-1: "Uknown", 0:"Surprise", 1:"Fear", 2:"Disgust", 3:"Happy", 4:"Sad", 5:"Anger", 6:"Neutral"}
 backend_url = os.getenv("BE_URL")
@@ -28,15 +28,16 @@ class VideoEmotionHandle:
         self.emotions = []
         self.model = model
         self.mp_face_detection = mp.solutions.face_detection
-        self.face_detection = self.mp_face_detection.FaceDetection(model_selection=0, min_detection_confidence=0.3)
+        self.face_detection = self.mp_face_detection.FaceDetection(
+            model_selection=0,
+            min_detection_confidence=0.3
+        )
 
     def faceDetection(self, image):
-        # Convert BGR to RGB
         results = self.face_detection.process(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
-        
         if not results.detections:
             return None
-        
+
         h, w, _ = image.shape
         largest_box = None
         largest_area = 0
@@ -57,22 +58,24 @@ class VideoEmotionHandle:
             x, y, bw, bh = largest_box
             x = max(0, x)
             y = max(0, y)
-            # Ensure bbox fits inside image
             x_end = min(x + bw, w)
             y_end = min(y + bh, h)
             return image[y:y_end, x:x_end]
 
         return None
                 
+
     def Video2Images(self):
         video = cv2.VideoCapture(self.videoPath)
+        print(f"Processing video: {self.videoPath}")
+
         original_fps = video.get(cv2.CAP_PROP_FPS)
-        print(original_fps)
+        print("Original FPS:", original_fps)
+
         self.fps = original_fps
         frame_interval = int(original_fps / self.fps) if original_fps > self.fps else 1
         
         frame_count = 0
-        self.AllImages = []
         
         while True:
             success, frame = video.read()
@@ -86,110 +89,122 @@ class VideoEmotionHandle:
             frame_count += 1
         
         video.release()
-
         self.AllFaces = [self.faceDetection(image) for image in self.AllImages]
+
 
     def preprocess_image(self, image):
         transform = transforms.Compose([
-            transforms.ToPILImage(),          # Convert numpy array to PIL Image
-            transforms.Resize((224, 224)),    # Resize image
-            transforms.ToTensor(),            # Convert PIL Image to tensor
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]), # Normalize
+            transforms.ToPILImage(),
+            transforms.Resize((224, 224)),
+            transforms.ToTensor(),
+            transforms.Normalize([0.485, 0.456, 0.406],
+                                 [0.229, 0.224, 0.225]),
         ])
         return transform(image)
 
     def makePredictEmotions(self):
         device = torch.device("cpu")
-        print(len(self.AllFaces))
-        images_tensor = [self.preprocess_image(image) for image in self.AllFaces if image is not None]
+        print("Faces detected:", len(self.AllFaces))
+
+        images_tensor = [self.preprocess_image(i) for i in self.AllFaces if i is not None]
         if len(images_tensor) == 0:
             return 
-        images_tensor = torch.stack(images_tensor)
-        images_tensor = images_tensor.to(device)
+        
+        images_tensor = torch.stack(images_tensor).to(device)
         self.model = self.model.to(device)
         self.model.eval()
+
         with torch.no_grad():
-            outputs = self.model(images_tensor.to(device))
+            outputs = self.model(images_tensor)
+
         predicted_classes = torch.argmax(outputs, dim=1)
 
-        listNoneFaceIndex = [i for i in range(len(self.AllFaces)) if self.AllFaces[i] is None]
-        for index in sorted(listNoneFaceIndex, reverse=True):
-            predicted_classes = predicted_classes.tolist()  
-            predicted_classes.insert(index, -1)            
-            predicted_classes = torch.tensor(predicted_classes) 
-        self.emotions = predicted_classes
+        none_indexes = [i for i in range(len(self.AllFaces)) if self.AllFaces[i] is None]
+        predicted_classes = predicted_classes.tolist()
+        for idx in none_indexes:
+            predicted_classes.insert(idx, -1)
+
+        self.emotions = torch.tensor(predicted_classes)
+
          
     def run(self):
-        
+        print("Starting emotion evaluation...")
+
         start = time.time()
         self.Video2Images()
-        end = time.time()
-        print(f"Video2Images() took {end - start:.3f} seconds")
-        
+        print("Video2Images time:", time.time() - start)
+
         start = time.time()
         self.makePredictEmotions()
-        end = time.time()
-        print(f"makePredictEmotions() took {end - start:.3f} seconds")
+        print("makePredictEmotions time:", time.time() - start)
 
-        print(f"number Image:{len(self.AllImages)}")
-        print(f"number face:{len(self.AllFaces)}")
-        print(f"number emotion:{len(self.emotions)}")
-        # You can add other processing steps here
+        print("Images:", len(self.AllImages))
+        print("Faces:", len(self.AllFaces))
+        print("Emotions:", len(self.emotions))
 
 
-model = models.mobilenet_v2(pretrained=True)
+
+# -----------------------------
+# Model loading
+# -----------------------------
+
+model = models.mobilenet_v2(weights=None)
 model.classifier[1] = nn.Linear(model.last_channel, 7)
-state = torch.load(os.path.join(current_path,"ResnetDuck_Cbam_cuaTuan"), map_location=torch.device('cpu'))     
-model.load_state_dict(state["net"])
+
+state = torch.load(os.path.join(current_path, "ResnetDuck_Cbam_cuaTuan"), map_location="cpu")
+model.load_state_dict(state["net"], strict=True)
 
 
+
+# -----------------------------
+# NO THREAD VERSION
+# -----------------------------
 def satisficationEvaluation(save_path):
-    def task():
-        print(f"start handle this: {save_path}")
-        # rs = 0
-        # for i in range(100):
-        #     print(i)
-        #     rs += 1
-        #     time.sleep(1)
-        # print("Done processing:", save_path)
-        # Usage
-        test = VideoEmotionHandle(save_path, model)
-        test.run()
-        class_name_count = {-1: 0, 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0}
-        
-        for i in class_name_count.keys():
-            class_name_count[i] = torch.sum(test.emotions == i).item() / len(test.emotions)
+    print(f"Start processing: {save_path}")
 
-        satistifiedResult = {}
-        for i in class_name_count.keys():
-            satistifiedResult[class_names[i]] = class_name_count[i] 
-            
-        #print(class_name_count)
-        
-        positive = ( satistifiedResult['Surprise']*2 + satistifiedResult['Happy']*3 + satistifiedResult['Neutral'] )
-        negative = ( satistifiedResult['Sad']*2 + satistifiedResult['Anger']*3 + satistifiedResult['Fear'])
-        statisfication = round(100*positive/(positive+negative),1)
-        
-        url = f"{backend_url}/deliveryRecord/updateSatistifiedResult"
-        data = {"statisfication": statisfication}
-        try:
-            response = requests.post(url, json=data)
-            response.raise_for_status()  # raise exception for HTTP errors
-            print("Video URL sent successfully:")
-            
-            satisficationEvaluation(save_path)
-        except requests.RequestException as e:
-            print("Failed to send video URL:", e)
-    # Run task in background thread
-    thread = threading.Thread(target=task, daemon=True)
-    thread.start()
+    handler = VideoEmotionHandle(save_path, model)
+    handler.run()
 
-    # Immediately return without waiting
-    return True
+    class_name_count = {i: 0 for i in class_names}
+
+    for i in class_name_count.keys():
+        class_name_count[i] = torch.sum(handler.emotions == i).item() / len(handler.emotions)
+
+    satistifiedResult = {}
+    for i in class_name_count.keys():
+        satistifiedResult[class_names[i]] = round(class_name_count[i], 3)
+
+    positive = (
+        satistifiedResult['Surprise'] * 2 +
+        satistifiedResult['Happy'] * 3 +
+        satistifiedResult['Neutral']
+    )
+    negative = (
+        satistifiedResult['Sad'] * 2 +
+        satistifiedResult['Anger'] * 3 +
+        satistifiedResult['Fear'] + satistifiedResult['Uknown']
+    )
+    statisfication = round(100 * positive / (positive + negative + 1e-10), 1)
+    print("Satisfaction:", f'{statisfication}%')
+    satistifiedResult['Satisfaction'] = f'{statisfication}%'
+
+    # Send result to API
+    url = f"{backend_url}/deliveryRecord/updateSatistifiedResult"
+    data = {"statisfication": str(satistifiedResult), 
+            "video_url": save_path }
+
+    print(url)
+    try:
+        response = requests.post(url, json=data)
+        response.raise_for_status()
+        print("Satisfaction result sent successfully!")
+    except requests.RequestException as e:
+        print("Failed to send:", e)
+
+    return statisfication
+
+
 
 if __name__ == "__main__":
-    # Example video path
-    video_path = "test_video.mp4"  # <-- replace with your actual video path
-
-    # Call satisficationEvaluation (runs in background thread)
+    video_path = r"C:\Tuan_use\vendobots\control_interface\transaction_records\transaction1_2025_11_24_13_43_46.mp4"
     satisficationEvaluation(video_path)
