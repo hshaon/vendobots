@@ -9,8 +9,8 @@ from app import database, models, crud, schemas
 def seed_initial_data():
     db = database.SessionLocal()
     try:
-        # Check and Seed ROBOTS
-        if crud.get_robots_count(db) == 0: # 👈 Use the new count function
+        # 1. Check and Seed ROBOTS
+        if crud.get_robots_count(db) == 0:
             print("Database is empty. Creating default robot...")
             robot_data = schemas.RobotCreate(
                 name="VendorBot Alpha",
@@ -19,19 +19,28 @@ def seed_initial_data():
                 battery_level=95
             )
             crud.create_robot(db, robot_data)
-            db.commit() # Commit the robot to ensure it gets an ID (needed for inventory foreign key)
+            db.commit()
             print("Default robot created successfully.")
         else:
             print("Robots already exist. Skipping robot seeding.")
 
-        # Check and Seed INVENTORY
+        # 2. Check and Seed INVENTORY
         if crud.get_inventory_count(db) == 0:
             print("Inventory table is empty. Loading data from CSV...")
             crud.seed_inventory_from_csv(db)
-            db.commit() # Commit the inventory items
+            db.commit()
             print("Inventory seeding complete.")
         else:
             print("Inventory items already exist. Skipping inventory seeding.")
+
+        # 3. Check and Seed LOGS (New Section)
+        if crud.get_logs_count(db) == 0:
+            print("Log table is empty. Loading data from logdata.csv...")
+            crud.seed_logs_from_csv(db)
+            # Commit is handled inside the function, but safe to verify
+            print("Log seeding complete.")
+        else:
+            print("Logs already exist. Skipping log seeding.")
 
     except Exception as e:
         db.rollback()
