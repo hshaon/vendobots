@@ -1,4 +1,6 @@
 import sys
+from PyQt5.QtGui import QIcon
+from PyQt5.QtCore import QSize
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import (
@@ -89,38 +91,60 @@ class ProjectionWidget(QWidget):
         super().__init__()
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(20, 20, 20, 20)
-        layout.setSpacing(10)
+        layout.setContentsMargins(24, 24, 24, 24)
+        layout.setSpacing(18)
 
-        # Icon row
-        icons = QHBoxLayout()
-        icons.setSpacing(8)
+        # ------------------- ICON BUTTON ROW -------------------
+        icon_row = QHBoxLayout()
+        icon_row.setSpacing(16)
 
-        for sym in ["←", "↑", "↓", "→", "◼"]:
-            b = QPushButton(sym)
+        # icon file mapping
+        icon_files = {
+            "left": "icons/arrow_left.png",
+            "up": "icons/arrow_up.png",
+            "down": "icons/arrow_down.png",
+            "right": "icons/arrow_right.png",
+            "stop": "icons/stop.png"
+        }
+
+        for name, path in icon_files.items():
+            b = QPushButton()
             b.setObjectName("ProjectionIconButton")
-            b.setFixedSize(40, 40)
-            b.clicked.connect(lambda _, s=sym: print(f"[Icon] {s} pressed"))
-            icons.addWidget(b)
+            b.setFixedSize(58, 58)
+            b.setIconSize(QSize(32, 32))
+            b.setIcon(QIcon(path))
+            b.clicked.connect(lambda _, n=name: print(f"[Projection icon] {n} pressed"))
+            icon_row.addWidget(b)
 
+        # ------------------- TEXT FIELD -------------------
         self.textbox = QLineEdit()
-        self.textbox.setPlaceholderText("Stopping")
+        self.textbox.setPlaceholderText("Enter projection message...")
+        self.textbox.setFixedHeight(42)
+        self.textbox.setObjectName("ProjectionText")
 
-        # Buttons
+        # ------------------- SHOW & CLEAR BUTTONS -------------------
         buttons = QHBoxLayout()
-        show = QPushButton("Show")
-        clear = QPushButton("Clear")
+        buttons.setSpacing(16)
 
-        show.clicked.connect(lambda: print("[Projection] Show"))
-        clear.clicked.connect(lambda: print("[Projection] Clear"))
+        show = QPushButton("Show")
+        show.setObjectName("ProjectionButton")
+        show.setFixedHeight(44)
+        show.clicked.connect(lambda: print("[Projection] Show pressed"))
+
+        clear = QPushButton("Clear")
+        clear.setObjectName("ProjectionButton")
+        clear.setFixedHeight(44)
+        clear.clicked.connect(lambda: print("[Projection] Clear pressed"))
 
         buttons.addWidget(show)
         buttons.addWidget(clear)
         buttons.addStretch()
 
-        layout.addLayout(icons)
+        # ------------------- FINAL LAYOUT -------------------
+        layout.addLayout(icon_row)
         layout.addWidget(self.textbox)
         layout.addLayout(buttons)
+
 
 # ---------------------- Joystick ---------------------------
 
@@ -129,51 +153,98 @@ class JoystickWidget(QWidget):
         super().__init__()
         self.callback = callback
 
+        # Outer layout
         layout = QVBoxLayout(self)
         layout.setSpacing(16)
 
+        # ---------------- SPEAKER + TALK ----------------
         row = QHBoxLayout()
         speaker = QPushButton("Speaker")
         speaker.setObjectName("SpeakerButton")
+        speaker.clicked.connect(lambda: print("[AUDIO] Speaker"))
+
         talk = QPushButton("Talk")
         talk.setObjectName("MicButton")
+        talk.clicked.connect(lambda: print("[AUDIO] Talk"))
+
         row.addWidget(speaker)
         row.addWidget(talk)
+        layout.addLayout(row)
 
+        # ---------------- THROTTLE ----------------
         throttle_label = QLabel("Throttle")
-        slider = QSlider(Qt.Horizontal)
+        layout.addWidget(throttle_label)
 
+        slider = QSlider(Qt.Horizontal)
+        slider.valueChanged.connect(lambda v: print("[THROTTLE]", v))
+        layout.addWidget(slider)
+
+        # ---------------- JOYSTICK PAD ----------------
         pad = QFrame()
         pad.setObjectName("JoystickPad")
-        pad.setFixedSize(220, 220)
-        grid = QGridLayout(pad)
-        grid.setContentsMargins(40, 40, 40, 40)
+        pad.setFixedSize(240, 240)
+        pad.setStyleSheet("background-color: #A7C8E8; border-radius: 120px;")
+        pad_layout = QVBoxLayout(pad)
+        pad_layout.setContentsMargins(0, 0, 0, 0)
 
-        def jb(sym):
-            b = QPushButton(sym)
-            b.setObjectName("JoystickButton")
-            b.setFixedSize(40, 40)
+        # ABSOLUTE LAYOUT INSIDE THE PAD
+        container = QWidget(pad)
+        container.setGeometry(0, 0, 240, 240)
+
+        # helper for circular buttons
+        def make_button(icon_file, cmd):
+            b = QPushButton("", container)
+            b.setObjectName("JoyBtn")
+            b.setIcon(QIcon(icon_file))
+            b.setIconSize(QSize(32, 32))
+            b.setFixedSize(56, 56)
+            b.setStyleSheet("""
+                QPushButton#JoyBtn {
+                    background: white;
+                    border-radius: 28px;
+                }
+                QPushButton#JoyBtn:hover {
+                    background: #f0f0f0;
+                }
+            """)
+            b.clicked.connect(lambda _, c=cmd: print("[Joystick]", c))
             return b
 
-        btn_up = jb("↑")
-        btn_down = jb("↓")
-        btn_left = jb("←")
-        btn_right = jb("→")
+        # Create buttons
+        up_btn = make_button("icons/up.png", "up")
+        down_btn = make_button("icons/down.png", "down")
+        left_btn = make_button("icons/left.png", "left")
+        right_btn = make_button("icons/right.png", "right")
 
-        center = QPushButton("")
-        center.setObjectName("StopButton")
-        center.setFixedSize(64, 64)
+        # CENTER STOP BUTTON
+        center_btn = QPushButton("", container)
+        center_btn.setObjectName("JoyCenter")
+        center_btn.setIcon(QIcon("icons/stop.png"))
+        center_btn.setIconSize(QSize(36, 36))
+        center_btn.setFixedSize(70, 70)
+        center_btn.setStyleSheet("""
+            QPushButton#JoyCenter {
+                background: #E34F4F;
+                border-radius: 35px;
+            }
+            QPushButton#JoyCenter:hover {
+                background: #D13C3C;
+            }
+        """)
+        center_btn.clicked.connect(lambda: print("[Joystick] stop"))
 
-        grid.addWidget(btn_up, 0, 1)
-        grid.addWidget(btn_left, 1, 0)
-        grid.addWidget(center, 1, 1)
-        grid.addWidget(btn_right, 1, 2)
-        grid.addWidget(btn_down, 2, 1)
+        # ---------------- POSITION BUTTONS MANUALLY ----------------
+        # Center of pad = (120, 120)
+        center_btn.move(120 - 35, 120 - 35)      # (x - half, y - half)
 
-        layout.addLayout(row)
-        layout.addWidget(throttle_label)
-        layout.addWidget(slider)
+        up_btn.move(120 - 28, 40 - 28)
+        down_btn.move(120 - 28, 200 - 28)
+        left_btn.move(40 - 28, 120 - 28)
+        right_btn.move(200 - 28, 120 - 28)
+
+        # Add pad to layout
         layout.addWidget(pad, alignment=Qt.AlignCenter)
+
 
 # ---------------------- Main Window ------------------------
 
@@ -368,6 +439,41 @@ class MainWindow(QWidget):
             background: #E34F4F;
             border-radius: 32px;
         }
+        
+        /* Projection icon button using images */
+        #ProjectionIconButton {
+            background: #D8C6FF;
+            border-radius: 16px;
+            border: none;
+        }
+
+        #ProjectionIconButton:hover {
+            background: #C2B0FF;
+        }
+
+        /* Projection text input */
+        #ProjectionText {
+            background: #FFFFFF;
+            border-radius: 12px;
+            border: 1px solid #CFCFCF;
+            padding-left: 12px;
+            padding-right: 12px;
+            font-size: 15px;
+        }
+
+        /* Show / Clear buttons */
+        #ProjectionButton {
+            background: #B29CFF;
+            color: white;
+            font-size: 15px;
+            border-radius: 16px;
+            padding: 6px 18px;
+        }
+
+        #ProjectionButton:hover {
+            background: #9A85E8;
+        }
+
         """)
 
 # ---------------------- Main ------------------------------
