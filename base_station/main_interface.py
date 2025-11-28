@@ -1,11 +1,9 @@
 import sys
-from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import QSize
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QColor
+from PyQt5.QtGui import QIcon, QColor
+from PyQt5.QtCore import QSize, Qt, QTimer
 from PyQt5.QtWidgets import (
-    QApplication, QWidget, QLabel, QPushButton, QTextEdit,
-    QVBoxLayout, QHBoxLayout, QGridLayout, QSlider, QFrame,
+    QApplication, QWidget, QLabel, QPushButton, QToolButton, QTextEdit,
+    QVBoxLayout, QHBoxLayout, QSlider, QFrame,
     QLineEdit, QGraphicsDropShadowEffect, QSizePolicy
 )
 
@@ -48,6 +46,7 @@ class LiveFeedWidget(QWidget):
 
         layout.addWidget(self.video_label)
 
+
 # ---------------------- Map Widget ------------------------
 
 class MapViewWidget(QWidget):
@@ -65,6 +64,7 @@ class MapViewWidget(QWidget):
 
         layout.addWidget(self.map_label)
 
+
 # ---------------------- Telemetry -------------------------
 
 class TelemetryWidget(QWidget):
@@ -72,8 +72,7 @@ class TelemetryWidget(QWidget):
         super().__init__()
 
         layout = QVBoxLayout(self)
-        #layout.setContentsMargins(16, 16, 16, 16)
-        layout.setContentsMargins(0,0,0,0)
+        layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(10)
 
         self.text = QTextEdit()
@@ -94,8 +93,6 @@ class TelemetryWidget(QWidget):
         layout.addWidget(self.text)
 
 
-
-
 # ---------------------- Projection -------------------------
 
 class ProjectionWidget(QWidget):
@@ -106,11 +103,10 @@ class ProjectionWidget(QWidget):
         layout.setContentsMargins(24, 24, 24, 24)
         layout.setSpacing(18)
 
-        # ------------------- ICON BUTTON ROW -------------------
+        # ICON BUTTON ROW
         icon_row = QHBoxLayout()
         icon_row.setSpacing(16)
 
-        # icon file mapping
         icon_files = {
             "left": "icons/arrow_left.png",
             "up": "icons/arrow_up.png",
@@ -128,13 +124,13 @@ class ProjectionWidget(QWidget):
             b.clicked.connect(lambda _, n=name: print(f"[Projection icon] {n} pressed"))
             icon_row.addWidget(b)
 
-        # ------------------- TEXT FIELD -------------------
+        # TEXT FIELD
         self.textbox = QLineEdit()
         self.textbox.setPlaceholderText("Enter projection message...")
         self.textbox.setFixedHeight(42)
         self.textbox.setObjectName("ProjectionText")
 
-        # ------------------- SHOW & CLEAR BUTTONS -------------------
+        # SHOW & CLEAR BUTTONS
         buttons = QHBoxLayout()
         buttons.setSpacing(16)
 
@@ -154,7 +150,6 @@ class ProjectionWidget(QWidget):
         buttons.addWidget(clear)
         buttons.addStretch()
 
-        # ------------------- FINAL LAYOUT -------------------
         layout.addLayout(icon_row)
         layout.addWidget(self.textbox)
         layout.addLayout(buttons)
@@ -167,11 +162,10 @@ class JoystickWidget(QWidget):
         super().__init__()
         self.callback = callback
 
-        # Outer layout
         layout = QVBoxLayout(self)
         layout.setSpacing(16)
 
-        # ---------------- SPEAKER + TALK ----------------
+        # SPEAKER + TALK
         row = QHBoxLayout()
         speaker = QPushButton("Speaker")
         speaker.setObjectName("SpeakerButton")
@@ -185,7 +179,7 @@ class JoystickWidget(QWidget):
         row.addWidget(talk)
         layout.addLayout(row)
 
-        # ---------------- THROTTLE ----------------
+        # THROTTLE
         throttle_label = QLabel("Throttle")
         layout.addWidget(throttle_label)
 
@@ -193,27 +187,28 @@ class JoystickWidget(QWidget):
         slider.valueChanged.connect(lambda v: print("[THROTTLE]", v))
         layout.addWidget(slider)
 
-        # ---------------- JOYSTICK PAD ----------------
+        # JOYSTICK PAD
         pad = QFrame()
         pad.setObjectName("JoystickPad")
         pad.setFixedSize(240, 240)
         pad.setStyleSheet("background-color: #A7C8E8; border-radius: 120px;")
-        pad_layout = QVBoxLayout(pad)
-        pad_layout.setContentsMargins(0, 0, 0, 0)
-
-        # ABSOLUTE LAYOUT INSIDE THE PAD
         container = QWidget(pad)
         container.setGeometry(0, 0, 240, 240)
 
-        # helper for circular buttons  
+        # helper for circular buttons
         def make_button(icon_file, cmd):
-            from PyQt5.QtWidgets import QToolButton
-
             b = QToolButton(container)
             b.setObjectName("JoyBtn")
             b.setIcon(QIcon(icon_file))
             b.setIconSize(QSize(32, 32))
             b.setFixedSize(56, 56)
+            b.setAutoRaise(False)
+            b.setCheckable(False)
+
+            # Press & hold (using signals)
+            b.pressed.connect(lambda c=cmd: self.callback(c))
+            b.released.connect(lambda: self.callback("stop"))
+
             b.setStyleSheet("""
                 QToolButton#JoyBtn {
                     background: white;
@@ -223,17 +218,7 @@ class JoystickWidget(QWidget):
                     background: #f0f0f0;
                 }
             """)
-
-            b.setAutoRaise(False)
-            b.setCheckable(False)
-
-            # TRUE press & hold
-            b.mousePressEvent = lambda event, c=cmd: self.callback(c)
-            b.mouseReleaseEvent = lambda event: self.callback("stop")
-
             return b
-
-
 
         # Create buttons
         up_btn = make_button("icons/up.png", "up")
@@ -242,37 +227,35 @@ class JoystickWidget(QWidget):
         right_btn = make_button("icons/right.png", "right")
 
         # CENTER STOP BUTTON
-
         center_btn = QToolButton(container)
         center_btn.setObjectName("JoyCenter")
         center_btn.setIcon(QIcon("icons/stop.png"))
         center_btn.setIconSize(QSize(36, 36))
         center_btn.setFixedSize(70, 70)
+        center_btn.setAutoRaise(False)
+        center_btn.setCheckable(False)
+
+        center_btn.pressed.connect(lambda: self.callback("stop"))
+        center_btn.released.connect(lambda: self.callback("stop"))
+
         center_btn.setStyleSheet("""
-            QPushButton#JoyCenter {
+            QToolButton#JoyCenter {
                 background: #E34F4F;
                 border-radius: 35px;
             }
-            QPushButton#JoyCenter:hover {
+            QToolButton#JoyCenter:hover {
                 background: #D13C3C;
             }
         """)
 
-        center_btn.mousePressEvent = lambda event: self.callback("stop")
-        center_btn.mouseReleaseEvent = lambda event: self.callback("stop")
-
-
-
-        # ---------------- POSITION BUTTONS MANUALLY ----------------
-        # Center of pad = (120, 120)
-        center_btn.move(120 - 35, 120 - 35)      # (x - half, y - half)
+        # POSITION BUTTONS MANUALLY
+        center_btn.move(120 - 35, 120 - 35)
 
         up_btn.move(120 - 28, 40 - 28)
         down_btn.move(120 - 28, 200 - 28)
         left_btn.move(40 - 28, 120 - 28)
         right_btn.move(200 - 28, 120 - 28)
 
-        # Add pad to layout
         layout.addWidget(pad, alignment=Qt.AlignCenter)
 
 
@@ -284,9 +267,16 @@ class MainWindow(QWidget):
         self.setWindowTitle("Vendobot Remote Control")
         self.resize(1300, 850)
         self.setup_styles()
-        
+
         # Connect with ROS-Bridge
         init_connection()
+
+        # TELEOP STATE
+        self.current_cmd = "stop"
+
+        # TELEOP TIMER (starts only while holding a button)
+        self.teleop_timer = QTimer(self)
+        self.teleop_timer.timeout.connect(self.publish_continuous_cmd)
 
         # ======================================================
         #                     LIVE FEED BLOCK
@@ -414,29 +404,38 @@ class MainWindow(QWidget):
 
         main.addLayout(top_row, 3)
         main.addLayout(bottom_row, 3)
-               
-            
+
+    # ---------------- TELEOP LOGIC --------------------
+
     def handle_teleop(self, cmd):
+        self.current_cmd = cmd
+
+        if cmd == "stop":
+            # Stop continuous publishing and send one stop
+            self.teleop_timer.stop()
+            send_cmd_vel(0.0, 0.0)
+        else:
+            # Start continuous publishing only while a button is held
+            if not self.teleop_timer.isActive():
+                self.teleop_timer.start(50)  # 20 Hz
+
+    def publish_continuous_cmd(self):
         linear_speed = 0.30
         angular_speed = 1.0
 
-        if cmd == "up":
+        if self.current_cmd == "up":
             send_cmd_vel(linear_speed, 0.0)
-
-        elif cmd == "down":
+        elif self.current_cmd == "down":
             send_cmd_vel(-linear_speed, 0.0)
-
-        elif cmd == "left":
+        elif self.current_cmd == "left":
             send_cmd_vel(0.0, angular_speed)
-
-        elif cmd == "right":
+        elif self.current_cmd == "right":
             send_cmd_vel(0.0, -angular_speed)
+        else:
+            # Safety: ensure we don't drift
+            send_cmd_vel(0.0, 0.0)
 
-        elif cmd == "stop":
-            stop_robot()
-
-
-
+    # ---------------- STYLES --------------------
 
     def setup_styles(self):
         self.setStyleSheet("""
@@ -491,7 +490,7 @@ class MainWindow(QWidget):
             background: #E34F4F;
             border-radius: 32px;
         }
-        
+
         /* Projection icon button using images */
         #ProjectionIconButton {
             background: #D8C6FF;
@@ -525,7 +524,7 @@ class MainWindow(QWidget):
         #ProjectionButton:hover {
             background: #9A85E8;
         }
-        
+
         #TelemetryText {
             background: #F7F8FA;
             border: none;
@@ -539,9 +538,8 @@ class MainWindow(QWidget):
             outline: none;
             border: none;
         }
-
-
         """)
+
 
 # ---------------------- Main ------------------------------
 
@@ -550,6 +548,7 @@ def main():
     w = MainWindow()
     w.show()
     sys.exit(app.exec_())
+
 
 if __name__ == "__main__":
     main()
