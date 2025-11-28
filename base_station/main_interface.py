@@ -205,25 +205,35 @@ class JoystickWidget(QWidget):
         container = QWidget(pad)
         container.setGeometry(0, 0, 240, 240)
 
-        # helper for circular buttons
+        # helper for circular buttons  
         def make_button(icon_file, cmd):
-            b = QPushButton("", container)
+            from PyQt5.QtWidgets import QToolButton
+
+            b = QToolButton(container)
             b.setObjectName("JoyBtn")
             b.setIcon(QIcon(icon_file))
             b.setIconSize(QSize(32, 32))
             b.setFixedSize(56, 56)
             b.setStyleSheet("""
-                QPushButton#JoyBtn {
+                QToolButton#JoyBtn {
                     background: white;
                     border-radius: 28px;
                 }
-                QPushButton#JoyBtn:hover {
+                QToolButton#JoyBtn:hover {
                     background: #f0f0f0;
                 }
             """)
-            b.clicked.connect(lambda _, c=cmd: self.callback(c))
+
+            b.setAutoRaise(False)
+            b.setCheckable(False)
+
+            # TRUE press & hold
+            b.mousePressEvent = lambda event, c=cmd: self.callback(c)
+            b.mouseReleaseEvent = lambda event: self.callback("stop")
 
             return b
+
+
 
         # Create buttons
         up_btn = make_button("icons/up.png", "up")
@@ -232,7 +242,8 @@ class JoystickWidget(QWidget):
         right_btn = make_button("icons/right.png", "right")
 
         # CENTER STOP BUTTON
-        center_btn = QPushButton("", container)
+
+        center_btn = QToolButton(container)
         center_btn.setObjectName("JoyCenter")
         center_btn.setIcon(QIcon("icons/stop.png"))
         center_btn.setIconSize(QSize(36, 36))
@@ -246,7 +257,10 @@ class JoystickWidget(QWidget):
                 background: #D13C3C;
             }
         """)
-        center_btn.clicked.connect(lambda: self.callback("stop"))
+
+        center_btn.mousePressEvent = lambda event: self.callback("stop")
+        center_btn.mouseReleaseEvent = lambda event: self.callback("stop")
+
 
 
         # ---------------- POSITION BUTTONS MANUALLY ----------------
@@ -400,9 +414,9 @@ class MainWindow(QWidget):
 
         main.addLayout(top_row, 3)
         main.addLayout(bottom_row, 3)
-        
+               
+            
     def handle_teleop(self, cmd):
-        # throttle from slider later; for now fixed 0.3 m/s
         linear_speed = 0.30
         angular_speed = 1.0
 
@@ -420,6 +434,8 @@ class MainWindow(QWidget):
 
         elif cmd == "stop":
             stop_robot()
+
+
 
 
     def setup_styles(self):
