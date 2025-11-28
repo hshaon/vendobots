@@ -9,6 +9,9 @@ from PyQt5.QtWidgets import (
     QLineEdit, QGraphicsDropShadowEffect, QSizePolicy
 )
 
+from send_movement import init_connection, send_cmd_vel, stop_robot
+
+
 # ---------------------- Helper Card ----------------------
 
 class Card(QFrame):
@@ -69,11 +72,18 @@ class TelemetryWidget(QWidget):
         super().__init__()
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(20, 20, 20, 20)
+        #layout.setContentsMargins(16, 16, 16, 16)
+        layout.setContentsMargins(0,0,0,0)
         layout.setSpacing(10)
 
         self.text = QTextEdit()
+        self.text.setObjectName("TelemetryText")
         self.text.setReadOnly(True)
+        self.text.setFrameStyle(QFrame.NoFrame)
+        self.text.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.text.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self.text.viewport().setAutoFillBackground(False)
+
         self.text.setText(
             "Speed: 0 m/s\n"
             "Tilt: 0 deg\n"
@@ -82,6 +92,8 @@ class TelemetryWidget(QWidget):
         )
 
         layout.addWidget(self.text)
+
+
 
 
 # ---------------------- Projection -------------------------
@@ -136,7 +148,9 @@ class ProjectionWidget(QWidget):
         clear.setFixedHeight(44)
         clear.clicked.connect(lambda: print("[Projection] Clear pressed"))
 
+        buttons.addStretch()
         buttons.addWidget(show)
+        buttons.addSpacing(12)
         buttons.addWidget(clear)
         buttons.addStretch()
 
@@ -207,7 +221,8 @@ class JoystickWidget(QWidget):
                     background: #f0f0f0;
                 }
             """)
-            b.clicked.connect(lambda _, c=cmd: print("[Joystick]", c))
+            b.clicked.connect(lambda _, c=cmd: self.callback(c))
+
             return b
 
         # Create buttons
@@ -231,7 +246,8 @@ class JoystickWidget(QWidget):
                 background: #D13C3C;
             }
         """)
-        center_btn.clicked.connect(lambda: print("[Joystick] stop"))
+        center_btn.clicked.connect(lambda: self.callback("stop"))
+
 
         # ---------------- POSITION BUTTONS MANUALLY ----------------
         # Center of pad = (120, 120)
@@ -254,6 +270,9 @@ class MainWindow(QWidget):
         self.setWindowTitle("Vendobot Remote Control")
         self.resize(1300, 850)
         self.setup_styles()
+        
+        # Connect with ROS-Bridge
+        init_connection()
 
         # ======================================================
         #                     LIVE FEED BLOCK
@@ -381,10 +400,27 @@ class MainWindow(QWidget):
 
         main.addLayout(top_row, 3)
         main.addLayout(bottom_row, 3)
-
-
+        
     def handle_teleop(self, cmd):
-        print("CMD:", cmd)
+        # throttle from slider later; for now fixed 0.3 m/s
+        linear_speed = 0.30
+        angular_speed = 1.0
+
+        if cmd == "up":
+            send_cmd_vel(linear_speed, 0.0)
+
+        elif cmd == "down":
+            send_cmd_vel(-linear_speed, 0.0)
+
+        elif cmd == "left":
+            send_cmd_vel(0.0, angular_speed)
+
+        elif cmd == "right":
+            send_cmd_vel(0.0, -angular_speed)
+
+        elif cmd == "stop":
+            stop_robot()
+
 
     def setup_styles(self):
         self.setStyleSheet("""
@@ -473,6 +509,21 @@ class MainWindow(QWidget):
         #ProjectionButton:hover {
             background: #9A85E8;
         }
+        
+        #TelemetryText {
+            background: #F7F8FA;
+            border: none;
+            border-radius: 14px;
+            padding: 12px;
+            font-size: 15px;
+            color: #333;
+        }
+
+        #TelemetryText:focus {
+            outline: none;
+            border: none;
+        }
+
 
         """)
 

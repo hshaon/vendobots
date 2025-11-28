@@ -8,3 +8,6 @@ ROS based control and perception stack for the vending robot.
 - vendo_voice: Speech integration
 - vendo_projection: Projector and visual cues
 - vendo_network: App and server connection
+
+### Run the following command to start rosbridge on websocket.
+$ roslaunch rosbridge_server rosbridge_websocket.launch
