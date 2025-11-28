@@ -1,13 +1,9 @@
 # ROS Workspace
+```main_interface.py``` running in the ```base_station``` commuincates with the robot via ROS bridge. So in the robot side, ROS bridge must be installed and kept running.
 
-ROS based control and perception stack for the vending robot.
+### Run the following commands to install ROS Bridge on Delivery Robot (Ubuntu 20.04)
+$ sudo apt update
+$ sudo apt install ros-noetic-rosbridge-suite
 
-### Core Packages
-- vendo_core: Motion and control logic
-- vendo_vision: Camera and LiDAR processing
-- vendo_voice: Speech integration
-- vendo_projection: Projector and visual cues
-- vendo_network: App and server connection
-
-### Run the following command to start rosbridge on websocket.
+### Start rosbridge on websocket [Keep it running]
 $ roslaunch rosbridge_server rosbridge_websocket.launch
