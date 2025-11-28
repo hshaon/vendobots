@@ -1,6 +1,6 @@
-# ROS 2 Workspace
+# ROS Workspace
 
-ROS 2-based control and perception stack for the vending robot.
+ROS based control and perception stack for the vending robot.
 
 ### Core Packages
 - vendo_core: Motion and control logic
