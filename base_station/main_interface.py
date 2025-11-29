@@ -1,6 +1,6 @@
 import sys
-from PyQt5.QtGui import QIcon, QColor
-from PyQt5.QtCore import QSize, Qt, QTimer
+from PyQt5.QtGui import QPixmap, QPainter, QColor, QIcon, QPolygonF, QTransform
+from PyQt5.QtCore import QSize, Qt, QTimer, QPointF
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QLabel, QPushButton, QToolButton, QTextEdit,
     QVBoxLayout, QHBoxLayout, QSlider, QFrame,
@@ -53,19 +53,120 @@ class MapViewWidget(QWidget):
     def __init__(self):
         super().__init__()
 
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
+        self.rotated_pixmap = None
+        self.origin_x = 0
+        self.origin_y = 0
+        self.resolution = 0.05
+        self.rx = 0
+        self.ry = 0
+        self.yaw = 0
 
-        self.map_label = QLabel("Map / Costmap")
-        self.map_label.setObjectName("MapArea")
-        self.map_label.setAlignment(Qt.AlignCenter)
-        self.map_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+    def load_from_occupancy(self, map_info, data):
+        from PyQt5.QtGui import QImage, QPixmap, QColor
 
-        layout.addWidget(self.map_label)
+        width = map_info["width"]
+        height = map_info["height"]
+
+        print(f"[Map] Building image {width}x{height} ...")
+
+        img = QImage(width, height, QImage.Format_Indexed8)
+        gray = [QColor(i, i, i).rgb() for i in range(256)]
+        img.setColorTable(gray)
+
+        for y in range(height):
+            base = y*width
+            for x in range(width):
+                v = data[base+x]
+                if v == -1:
+                    pix = 127
+                elif v == 0:
+                    pix = 255
+                else:
+                    pix = 0
+                img.setPixel(x, y, pix)
+
+        pixmap = QPixmap.fromImage(img)
+
+        t = QTransform()
+        t.rotate(-90)
+        self.rotated_pixmap = pixmap.transformed(t, Qt.SmoothTransformation)
+        # FIX: flip map horizontally
+        flip = QTransform()
+        flip.scale(-1, 1)   # horizontal flip
+        self.rotated_pixmap = self.rotated_pixmap.transformed(flip)
 
 
-# ---------------------- Telemetry -------------------------
+        self.resolution = map_info["resolution"]
+        self.origin_x = map_info["origin"]["position"]["x"]
+        self.origin_y = map_info["origin"]["position"]["y"]
+
+        print("[Map] Ready, rotated size =", self.rotated_pixmap.size())
+        self.update()
+
+    def update_robot_pose(self, x, y, yaw_deg):
+        self.rx = x
+        self.ry = y
+        self.yaw = yaw_deg
+        self.update()
+
+    def paintEvent(self, event):
+        super().paintEvent(event)
+
+        if self.rotated_pixmap is None:
+            return
+
+        painter = QPainter(self)
+        r = self.rect()   # paint across full widget
+
+        scaled = self.rotated_pixmap.scaled(
+            r.width(), r.height(),
+            Qt.KeepAspectRatio, Qt.SmoothTransformation
+        )
+
+        # center inside rect
+        x = (r.width() - scaled.width()) / 2
+        y = (r.height() - scaled.height()) / 2
+        painter.drawPixmap(int(x), int(y), scaled)
+
+        # --- Robot arrow ---
+        map_w = self.rotated_pixmap.width()
+        map_h = self.rotated_pixmap.height()
+
+        # 1. world → map pixel
+        px_map = (self.rx - self.origin_x) / self.resolution
+        py_map = (self.ry - self.origin_y) / self.resolution
+
+        px_map -= 0.5
+        py_map -= 0.5
+
+        # 2. Rotate 90° CCW with corrected X direction
+        px_rot = (map_w - 1) - py_map       # <-- FIXED HERE
+        py_rot = (map_h - 1) - px_map
+
+        # 3. Scale
+        sx = scaled.width() / map_w
+        sy = scaled.height() / map_h
+
+        px = x + px_rot * sx
+        py = y + py_rot * sy
+
+
+        arrow = QPolygonF([
+            QPointF(0, -10),
+            QPointF(6, 8),
+            QPointF(-6, 8)
+        ])
+
+        painter.save()
+        painter.translate(px, py)
+        painter.rotate(-self.yaw)
+        painter.setBrush(QColor(255, 0, 0))
+        painter.setPen(Qt.NoPen)
+        painter.drawPolygon(arrow)
+        painter.restore()
+
+
+# ---------------------- Telemetry Text -------------------------
 
 class TelemetryWidget(QWidget):
     def __init__(self):
@@ -271,6 +372,16 @@ class MainWindow(QWidget):
         # Connect with ROS-Bridge
         init_connection()
 
+        # Telemetry backend (rosbridge)
+        from telemetry import Telemetry
+        self.telemetry = Telemetry()
+        self._map_loaded_from_telemetry = False
+
+        # Poll telemetry in GUI thread
+        self.telemetry_timer = QTimer(self)
+        self.telemetry_timer.timeout.connect(self.refresh_telemetry_from_ros)
+        self.telemetry_timer.start(100)   # every 100 ms
+
         # TELEOP STATE
         self.current_cmd = "stop"
 
@@ -320,7 +431,9 @@ class MainWindow(QWidget):
         map_layout = QVBoxLayout(map_card)
         map_layout.setContentsMargins(0, 0, 0, 0)
         map_layout.setSpacing(0)
-        map_layout.addWidget(MapViewWidget())
+
+        self.map_widget = MapViewWidget()
+        map_layout.addWidget(self.map_widget)
 
         map_container = QVBoxLayout()
         map_container.setSpacing(6)
@@ -404,6 +517,31 @@ class MainWindow(QWidget):
 
         main.addLayout(top_row, 3)
         main.addLayout(bottom_row, 3)
+
+    # ---------------- Telemetry polling in GUI thread ----------------
+
+    def refresh_telemetry_from_ros(self):
+
+        # map load
+        if not self._map_loaded_from_telemetry:
+            map_info, map_data = self.telemetry.get_map()
+            if map_info is not None:
+                print("[Main] Loading map now...")
+                self.map_widget.load_from_occupancy(map_info, map_data)
+                self._map_loaded_from_telemetry = True
+
+        # pose update
+        pose = self.telemetry.get_pose()
+        if pose:
+            x, y, yaw, speed = pose
+            self.map_widget.update_robot_pose(x, y, yaw)
+
+            tele = self.findChild(TelemetryWidget)
+            if tele:
+                tele.text.setText(
+                    f"X: {x:.2f}\nY: {y:.2f}\nYaw: {yaw:.1f}°\nSpeed: {speed:.2f}"
+                )
+
 
     # ---------------- TELEOP LOGIC --------------------
 
