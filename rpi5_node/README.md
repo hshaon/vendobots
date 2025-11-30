@@ -1,13 +1,6 @@
 # Raspberry Pi 5 --- ROS Noetic + Ultra‑Low‑Latency Camera Streaming
 
-*A complete GitHub‑style setup guide with clean formatting, code blocks,
-badges, and structure.*
-
-------------------------------------------------------------------------
-
-## 📦 Overview
-
-This repo provides a complete setup for:
+## Overview
 
 -   Running **ROS Noetic inside Docker** on Raspberry Pi 5\
 -   Streaming **ultra‑low‑latency RTP H.264 video** from a USB camera\
@@ -17,7 +10,7 @@ This repo provides a complete setup for:
 
 ------------------------------------------------------------------------
 
-## 🏗 Requirements
+## Requirements
 
 ### Raspberry Pi 5
 
@@ -33,7 +26,7 @@ This repo provides a complete setup for:
 
 ------------------------------------------------------------------------
 
-## 🐳 Install Docker on Raspberry Pi 5
+## Install Docker on Raspberry Pi 5
 
 ``` bash
 curl -fsSL https://get.docker.com -o get-docker.sh
@@ -51,7 +44,7 @@ docker run hello-world
 
 ------------------------------------------------------------------------
 
-## 🐢 Pull ROS Noetic Image
+## Pull ROS Noetic Image
 
 ``` bash
 docker pull ros:noetic-ros-base
@@ -59,7 +52,7 @@ docker pull ros:noetic-ros-base
 
 ------------------------------------------------------------------------
 
-## 🐢 Create ROS Noetic Container
+## Create ROS Noetic Container
 
 ``` bash
 docker run -it --name ros1_noetic --network host ros:noetic-ros-base bash
@@ -74,7 +67,7 @@ docker exec -it ros1_noetic bash
 
 ------------------------------------------------------------------------
 
-## 🔧 Configure ROS Environment (inside container)
+## Configure ROS Environment (inside container)
 
 ``` bash
 echo "export ROS_MASTER_URI=http://<ROBOT_IP>:11311" >> ~/.bashrc
@@ -91,7 +84,7 @@ rosnode list
 
 ------------------------------------------------------------------------
 
-## 🎥 Install GStreamer for Camera Streaming
+## Install GStreamer for Camera Streaming
 
 ``` bash
 sudo apt update
@@ -100,7 +93,7 @@ sudo apt install -y   gstreamer1.0-tools   gstreamer1.0-libav   gstreamer1.0-plu
 
 ------------------------------------------------------------------------
 
-## 🔍 Check Camera Support
+## Check Camera Support
 
 ``` bash
 ls /dev/video*
@@ -111,7 +104,7 @@ Ensure MJPEG is present.
 
 ------------------------------------------------------------------------
 
-## ⚡ Start Ultra‑Low‑Latency RTP Stream (Pi → Base Station)
+## Start Ultra‑Low‑Latency RTP Stream (Pi → Base Station)
 
 ``` bash
 gst-launch-1.0 -v   v4l2src device=/dev/video0 !   image/jpeg,width=640,height=480,framerate=30/1 !   jpegdec ! videoconvert !   openh264enc bitrate=3000000 complexity=0 rate-control=1 !   video/x-h264,profile=baseline !   h264parse config-interval=-1 !   rtph264pay pt=96 !   udpsink host=<BASE_STATION_IP> port=5000 sync=false async=false
@@ -122,7 +115,7 @@ gst-launch-1.0 -v   v4l2src device=/dev/video0 !   image/jpeg,width=640,height=4
 
 ------------------------------------------------------------------------
 
-## 🖥 Base‑Station Receiver (GStreamer)
+## Base‑Station Receiver (GStreamer)
 
 Install:
 
@@ -139,7 +132,7 @@ gst-launch-1.0 -v   udpsrc port=5000   caps="application/x-rtp, media=video, enc
 
 ------------------------------------------------------------------------
 
-## 🚀 Auto‑Start Camera Streaming on Boot (systemd)
+## Auto‑Start Camera Streaming on Boot (systemd)
 
 Create service:
 
@@ -172,7 +165,7 @@ sudo systemctl start rpi_cam.service
 
 ------------------------------------------------------------------------
 
-## 🧪 Diagnostics
+## Diagnostics
 
 Check service:
 
@@ -188,26 +181,12 @@ journalctl -u rpi_cam.service -f
 
 ------------------------------------------------------------------------
 
-## 📎 Summary
-
-This guide provides:
-
--   🚦 Complete ROS Noetic Docker environment\
--   🎥 Ultra‑low‑latency camera streaming via RTP/H.264\
--   🛠 Auto‑boot camera service\
--   🖥 Base‑station GStreamer receiving pipeline\
--   🔗 Networking configuration for ROS
-
-Your Pi is now production‑ready for robotics, teleop, and perception.
-
-------------------------------------------------------------------------
-
-## 📝 License
+## License
 
 MIT License unless otherwise specified.
 
 ------------------------------------------------------------------------
 
-## 🙋‍♂️ Support
+## Support
 
 Open an Issue or request enhancements anytime.
