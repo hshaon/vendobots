@@ -1,6 +1,6 @@
 import sys
-from PyQt5.QtGui import QPixmap, QPainter, QColor, QIcon, QPolygonF, QTransform, QImage
-from PyQt5.QtCore import QSize, Qt, QTimer, QPointF
+from PyQt5.QtGui import QPixmap, QPainter, QColor, QIcon, QPolygonF, QTransform, QImage, QPainterPath
+from PyQt5.QtCore import QSize, Qt, QTimer, QPointF, pyqtSignal
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QLabel, QPushButton, QToolButton, QTextEdit,
     QVBoxLayout, QHBoxLayout, QSlider, QFrame,
@@ -30,11 +30,111 @@ class Card(QFrame):
 
 # ---------------------- Live Feed -------------------------
 
+# class LiveFeedWidget(QWidget):
+#     def __init__(self):
+#         super().__init__()
+
+#         #from gi.repository import Gst, GLib
+#         import gi
+#         gi.require_version("Gst", "1.0")
+#         from gi.repository import Gst, GLib
+#         import numpy as np
+
+#         self.Gst = Gst
+#         self.GLib = GLib
+#         self.np = np
+
+#         layout = QVBoxLayout(self)
+#         layout.setContentsMargins(0, 0, 0, 0)
+
+#         self.video_label = QLabel("Connecting...")
+#         self.video_label.setAlignment(Qt.AlignCenter)
+#         self.video_label.setScaledContents(True)
+#         self.video_label.setObjectName("VideoArea")
+#         layout.addWidget(self.video_label)
+
+#         # Initialize GStreamer
+#         Gst.init(None)
+
+#         # PIPELINE WORKS EXACTLY LIKE THE gst-launch VERSION
+#         pipeline_str = (
+#             "udpsrc port=5000 caps=\"application/x-rtp, media=video, encoding-name=H264, payload=96\" ! "
+#             "rtph264depay ! h264parse ! avdec_h264 ! videoconvert ! "
+#             "video/x-raw,format=RGB ! appsink name=appsink emit-signals=true sync=false max-buffers=1 drop=true"
+#         )
+
+#         self.pipeline = Gst.parse_launch(pipeline_str)
+
+#         self.appsink = self.pipeline.get_by_name("appsink")
+#         self.appsink.connect("new-sample", self.on_new_sample)
+
+#         self.pipeline.set_state(Gst.State.PLAYING)
+
+#         # Timer to keep GStreamer processing
+#         self.timer = QTimer(self)
+#         self.timer.timeout.connect(self.gst_step)
+#         self.timer.start(5)
+
+#     def gst_step(self):
+#         # Let GStreamer process internal messages (avoids freezes)
+#         bus = self.pipeline.get_bus()
+#         msg = bus.poll(self.Gst.MessageType.ANY, 0)
+#         # we ignore msg content; we only want the pump
+
+#     def on_new_sample(self, sink):
+#         sample = sink.emit("pull-sample")
+#         buf = sample.get_buffer()
+#         caps = sample.get_caps()
+#         w = caps.get_structure(0).get_value("width")
+#         h = caps.get_structure(0).get_value("height")
+
+#         success, map_info = buf.map(self.Gst.MapFlags.READ)
+#         if not success:
+#             return self.Gst.FlowReturn.ERROR
+
+#         frame = self.np.ndarray(
+#             shape=(h, w, 3),
+#             dtype=self.np.uint8,
+#             buffer=map_info.data
+#         )
+
+#         # Convert to QImage → QLabel
+#         qimg = QImage(frame.data, w, h, 3 * w, QImage.Format_RGB888)
+
+
+#         # self.video_label.setPixmap(QPixmap.fromImage(qimg)) # uncomment if rectanfular 
+
+#         # code for rounded corner in live feed. Start------------
+#         pix = QPixmap.fromImage(qimg)
+#         rounded = QPixmap(pix.size())
+#         rounded.fill(Qt.transparent)
+
+#         p = QPainter(rounded)
+#         p.setRenderHint(QPainter.Antialiasing)
+#         path = QPainterPath()
+#         path.addRoundedRect(0, 0, pix.width(), pix.height(), 24, 24)
+#         p.setClipPath(path)
+#         p.drawPixmap(0, 0, pix)
+#         p.end()
+
+#         self.video_label.setPixmap(rounded)
+#         # code for rounded corner in live feed. End---------------
+
+
+#         buf.unmap(map_info)
+#         return self.Gst.FlowReturn.OK
+
+#     def closeEvent(self, event):
+#         self.pipeline.set_state(self.Gst.State.NULL)
+#         super().closeEvent(event)
+
+
 class LiveFeedWidget(QWidget):
+    new_frame = pyqtSignal(QImage)   # <-- Qt-safe signal
+
     def __init__(self):
         super().__init__()
 
-        #from gi.repository import Gst, GLib
         import gi
         gi.require_version("Gst", "1.0")
         from gi.repository import Gst, GLib
@@ -50,13 +150,13 @@ class LiveFeedWidget(QWidget):
         self.video_label = QLabel("Connecting...")
         self.video_label.setAlignment(Qt.AlignCenter)
         self.video_label.setScaledContents(True)
-        self.video_label.setObjectName("VideoArea")
         layout.addWidget(self.video_label)
 
-        # Initialize GStreamer
+        # Connect signal to Qt GUI slot
+        self.new_frame.connect(self.update_gui_frame)
+
         Gst.init(None)
 
-        # PIPELINE WORKS EXACTLY LIKE THE gst-launch VERSION
         pipeline_str = (
             "udpsrc port=5000 caps=\"application/x-rtp, media=video, encoding-name=H264, payload=96\" ! "
             "rtph264depay ! h264parse ! avdec_h264 ! videoconvert ! "
@@ -64,24 +164,22 @@ class LiveFeedWidget(QWidget):
         )
 
         self.pipeline = Gst.parse_launch(pipeline_str)
-
         self.appsink = self.pipeline.get_by_name("appsink")
         self.appsink.connect("new-sample", self.on_new_sample)
 
         self.pipeline.set_state(Gst.State.PLAYING)
 
-        # Timer to keep GStreamer processing
+        # Keep GStreamer pumping
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.gst_step)
         self.timer.start(5)
 
     def gst_step(self):
-        # Let GStreamer process internal messages (avoids freezes)
         bus = self.pipeline.get_bus()
         msg = bus.poll(self.Gst.MessageType.ANY, 0)
-        # we ignore msg content; we only want the pump
 
     def on_new_sample(self, sink):
+        # This is running on GStreamer thread
         sample = sink.emit("pull-sample")
         buf = sample.get_buffer()
         caps = sample.get_caps()
@@ -98,17 +196,33 @@ class LiveFeedWidget(QWidget):
             buffer=map_info.data
         )
 
-        # Convert to QImage → QLabel
         qimg = QImage(frame.data, w, h, 3 * w, QImage.Format_RGB888)
-        self.video_label.setPixmap(QPixmap.fromImage(qimg))
-
         buf.unmap(map_info)
+
+        # Emit Qt signal (safe) → handled in main thread
+        self.new_frame.emit(qimg)
+
         return self.Gst.FlowReturn.OK
+
+    def update_gui_frame(self, qimg):
+        # Now in Qt main thread → safe to draw
+        pix = QPixmap.fromImage(qimg)
+        rounded = QPixmap(pix.size())
+        rounded.fill(Qt.transparent)
+
+        p = QPainter(rounded)
+        p.setRenderHint(QPainter.Antialiasing)
+        path = QPainterPath()
+        path.addRoundedRect(0, 0, pix.width(), pix.height(), 24, 24)
+        p.setClipPath(path)
+        p.drawPixmap(0, 0, pix)
+        p.end()
+
+        self.video_label.setPixmap(rounded)
 
     def closeEvent(self, event):
         self.pipeline.set_state(self.Gst.State.NULL)
         super().closeEvent(event)
-
 
 
 # ---------------------- Map Widget ------------------------
@@ -125,7 +239,28 @@ class MapViewWidget(QWidget):
         self.ry = 0
         self.yaw = 0
 
+        # --- Status Overlay ---
+        self.status = QLabel("Connecting to ROS…")
+        self.status.setAlignment(Qt.AlignCenter)
+        self.status.setStyleSheet("""
+            font-size: 15px;
+            color: #555;
+        """)
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0,0,0,0)
+        layout.addWidget(self.status)
+
+    def set_status(self, text):
+        self.status.setText(text)
+        self.status.show()
+        self.rotated_pixmap = None   # force paintEvent to skip drawing map
+        self.update()
+
+    # Called once when map arrives
     def load_from_occupancy(self, map_info, data):
+        self.set_status("Rendering map…")
+
         from PyQt5.QtGui import QImage, QPixmap, QColor
 
         width = map_info["width"]
@@ -138,7 +273,7 @@ class MapViewWidget(QWidget):
         img.setColorTable(gray)
 
         for y in range(height):
-            base = y*width
+            base = y * width
             for x in range(width):
                 v = data[base+x]
                 if v == -1:
@@ -151,20 +286,22 @@ class MapViewWidget(QWidget):
 
         pixmap = QPixmap.fromImage(img)
 
+        # rotate + flip map
         t = QTransform()
         t.rotate(-90)
-        self.rotated_pixmap = pixmap.transformed(t, Qt.SmoothTransformation)
-        # FIX: flip map horizontally
+        pm = pixmap.transformed(t, Qt.SmoothTransformation)
         flip = QTransform()
-        flip.scale(-1, 1)   # horizontal flip
-        self.rotated_pixmap = self.rotated_pixmap.transformed(flip)
-
+        flip.scale(-1,1)
+        self.rotated_pixmap = pm.transformed(flip)
 
         self.resolution = map_info["resolution"]
         self.origin_x = map_info["origin"]["position"]["x"]
         self.origin_y = map_info["origin"]["position"]["y"]
 
         print("[Map] Ready, rotated size =", self.rotated_pixmap.size())
+
+        # Map ready
+        self.status.hide()
         self.update()
 
     def update_robot_pose(self, x, y, yaw_deg):
@@ -177,43 +314,36 @@ class MapViewWidget(QWidget):
         super().paintEvent(event)
 
         if self.rotated_pixmap is None:
+            # Only status label is shown
             return
 
         painter = QPainter(self)
-        r = self.rect()   # paint across full widget
+        r = self.rect()
 
         scaled = self.rotated_pixmap.scaled(
             r.width(), r.height(),
             Qt.KeepAspectRatio, Qt.SmoothTransformation
         )
 
-        # center inside rect
         x = (r.width() - scaled.width()) / 2
         y = (r.height() - scaled.height()) / 2
         painter.drawPixmap(int(x), int(y), scaled)
 
-        # --- Robot arrow ---
+        # Draw robot arrow
         map_w = self.rotated_pixmap.width()
         map_h = self.rotated_pixmap.height()
 
-        # 1. world → map pixel
-        px_map = (self.rx - self.origin_x) / self.resolution
-        py_map = (self.ry - self.origin_y) / self.resolution
+        px_map = (self.rx - self.origin_x) / self.resolution - 0.5
+        py_map = (self.ry - self.origin_y) / self.resolution - 0.5
 
-        px_map -= 0.5
-        py_map -= 0.5
-
-        # 2. Rotate 90° CCW with corrected X direction
-        px_rot = (map_w - 1) - py_map       # <-- FIXED HERE
+        px_rot = (map_w - 1) - py_map
         py_rot = (map_h - 1) - px_map
 
-        # 3. Scale
         sx = scaled.width() / map_w
         sy = scaled.height() / map_h
 
         px = x + px_rot * sx
         py = y + py_rot * sy
-
 
         arrow = QPolygonF([
             QPointF(0, -10),
@@ -228,6 +358,7 @@ class MapViewWidget(QWidget):
         painter.setPen(Qt.NoPen)
         painter.drawPolygon(arrow)
         painter.restore()
+
 
 
 # ---------------------- Telemetry Text -------------------------
@@ -587,12 +718,32 @@ class MainWindow(QWidget):
     def refresh_telemetry_from_ros(self):
 
         # map load
+        # if not self._map_loaded_from_telemetry:
+        #     map_info, map_data = self.telemetry.get_map()
+        #     if map_info is not None:
+        #         print("[Main] Loading map now...")
+        #         self.map_widget.load_from_occupancy(map_info, map_data)
+        #         self._map_loaded_from_telemetry = True
+
+
         if not self._map_loaded_from_telemetry:
+            # Update status in map card
+            if not self.telemetry.ros.is_connected:
+                self.map_widget.set_status("Connecting to ROS…")
+                return
+
             map_info, map_data = self.telemetry.get_map()
-            if map_info is not None:
-                print("[Main] Loading map now...")
-                self.map_widget.load_from_occupancy(map_info, map_data)
-                self._map_loaded_from_telemetry = True
+
+            if map_info is None:
+                self.map_widget.set_status("Waiting for /map…")
+                return
+
+            # Map arrived!
+            self.map_widget.set_status("Map received, rendering…")
+            print("[Main] Loading map now...")
+            self.map_widget.load_from_occupancy(map_info, map_data)
+            self._map_loaded_from_telemetry = True
+
 
         # pose update
         pose = self.telemetry.get_pose()
