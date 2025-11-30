@@ -1,0 +1,13 @@
+atr-lab@localhost:~/Downloads/base_station$ /usr/bin/python3 main_interface.py
+QSocketNotifier: Can only be used with threads started with QThread
+[ROS] Connecting to rosbridge at 192.168.2.115:9090 ...
+[ROS] Connected & /cmd_vel publisher ready.
+[Telemetry] Connecting to rosbridge...
+/home/atr-lab/Downloads/base_station/main_interface.py:37: PyGIWarning: Gst was imported without specifying a version first. Use gi.require_version('Gst', '1.0') before import to ensure that the right version gets loaded.
+  from gi.repository import Gst, GLib
+[Telemetry] Connected.
+[Telemetry] /map received.
+[Main] Loading map now...
+[Map] Building image 626x966 ...
+[Map] Ready, rotated size = PyQt5.QtCore.QSize(966, 626)
+

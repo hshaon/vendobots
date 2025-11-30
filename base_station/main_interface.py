@@ -1,5 +1,5 @@
 import sys
-from PyQt5.QtGui import QPixmap, QPainter, QColor, QIcon, QPolygonF, QTransform
+from PyQt5.QtGui import QPixmap, QPainter, QColor, QIcon, QPolygonF, QTransform, QImage
 from PyQt5.QtCore import QSize, Qt, QTimer, QPointF
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QLabel, QPushButton, QToolButton, QTextEdit,
@@ -34,17 +34,81 @@ class LiveFeedWidget(QWidget):
     def __init__(self):
         super().__init__()
 
+        #from gi.repository import Gst, GLib
+        import gi
+        gi.require_version("Gst", "1.0")
+        from gi.repository import Gst, GLib
+        import numpy as np
+
+        self.Gst = Gst
+        self.GLib = GLib
+        self.np = np
+
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
 
-        self.video_label = QLabel("Video Stream")
-        self.video_label.setObjectName("VideoArea")
+        self.video_label = QLabel("Connecting...")
         self.video_label.setAlignment(Qt.AlignCenter)
-        self.video_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.video_label.setScaledContents(True)
-
+        self.video_label.setObjectName("VideoArea")
         layout.addWidget(self.video_label)
+
+        # Initialize GStreamer
+        Gst.init(None)
+
+        # PIPELINE WORKS EXACTLY LIKE THE gst-launch VERSION
+        pipeline_str = (
+            "udpsrc port=5000 caps=\"application/x-rtp, media=video, encoding-name=H264, payload=96\" ! "
+            "rtph264depay ! h264parse ! avdec_h264 ! videoconvert ! "
+            "video/x-raw,format=RGB ! appsink name=appsink emit-signals=true sync=false max-buffers=1 drop=true"
+        )
+
+        self.pipeline = Gst.parse_launch(pipeline_str)
+
+        self.appsink = self.pipeline.get_by_name("appsink")
+        self.appsink.connect("new-sample", self.on_new_sample)
+
+        self.pipeline.set_state(Gst.State.PLAYING)
+
+        # Timer to keep GStreamer processing
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.gst_step)
+        self.timer.start(5)
+
+    def gst_step(self):
+        # Let GStreamer process internal messages (avoids freezes)
+        bus = self.pipeline.get_bus()
+        msg = bus.poll(self.Gst.MessageType.ANY, 0)
+        # we ignore msg content; we only want the pump
+
+    def on_new_sample(self, sink):
+        sample = sink.emit("pull-sample")
+        buf = sample.get_buffer()
+        caps = sample.get_caps()
+        w = caps.get_structure(0).get_value("width")
+        h = caps.get_structure(0).get_value("height")
+
+        success, map_info = buf.map(self.Gst.MapFlags.READ)
+        if not success:
+            return self.Gst.FlowReturn.ERROR
+
+        frame = self.np.ndarray(
+            shape=(h, w, 3),
+            dtype=self.np.uint8,
+            buffer=map_info.data
+        )
+
+        # Convert to QImage → QLabel
+        qimg = QImage(frame.data, w, h, 3 * w, QImage.Format_RGB888)
+        self.video_label.setPixmap(QPixmap.fromImage(qimg))
+
+        buf.unmap(map_info)
+        return self.Gst.FlowReturn.OK
+
+    def closeEvent(self, event):
+        self.pipeline.set_state(self.Gst.State.NULL)
+        super().closeEvent(event)
+
 
 
 # ---------------------- Map Widget ------------------------
