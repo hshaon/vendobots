@@ -23,16 +23,19 @@ statusRecording = None
 load_dotenv()
 
 # Access the environment variables
-robot_id = os.getenv("ID_ROBOT")
-backend_url = os.getenv("BE_URL")
-control_camera_url = os.getenv("CONTROL_CAMERA_URL")
+robot_id = "1"
+backend_url = "http://192.168.2.113:8000"
+control_camera_url = "https://hricameratest.onrender.com"#os.getenv("CONTROL_CAMERA_URL")
 
-UDP_IP = "192.168.0.17" # IP must match that of the receiver
+UDP_IP = "192.168.2.113" # IP must match that of the receiver
 UDP_PORT = 5005 # Must match the port defined in control_interface.py
-MAX_UDP_PACKET = 65000
+MAX_UDP_PACKET = 45000
 
-frame_width = 640
-frame_height = 480
+#frame_width = 640
+#frame_height = 480
+frame_width = 480
+frame_height = 360
+
 fps = 30
 fourcc = cv2.VideoWriter_fourcc(*'mp4v') 
 
@@ -42,7 +45,10 @@ videourl = None
 def start_record():
     global out, recording, save_path
     # Video output path
-    save_path = os.path.join(record_folder, f"{current_video_file.replace(" ","_").replace(":","_").replace("-","_")}.mp4")
+    save_path = os.path.join(
+    record_folder,
+    f"{current_video_file.replace(' ','_').replace(':','_').replace('-','_')}.mp4")
+
 
     # Initialize VideoWriter
     out = cv2.VideoWriter(save_path, fourcc, fps, (frame_width, frame_height))
@@ -70,7 +76,8 @@ def stop_record():
                 response.raise_for_status()  # raise exception for HTTP errors
                 print("Video URL sent successfully:")
                 
-                satisficationEvaluation(save_path)
+                thread = threading.Thread(target=satisficationEvaluation, args=(save_path,), daemon=True)
+                thread.start()
             except requests.RequestException as e:
                 print("Failed to send video URL:", e)
     recording = False
@@ -105,7 +112,7 @@ def video_streamer():
                 break
 
             # 2. Encode the frame to JPEG bytes
-            encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90] 
+            encode_param = [cv2.IMWRITE_JPEG_QUALITY, 50]
             _, jpeg_buffer = cv2.imencode('.jpg', frame, encode_param)
             data = jpeg_buffer.tobytes()
             
@@ -115,7 +122,8 @@ def video_streamer():
                 stop_record()
                 
             if recording and out:
-                out.write(frame)
+                frame_resized = cv2.resize(frame, (frame_width, frame_height))
+                out.write(frame_resized)
 
             # 3. Send the data over UDP
             if len(data) < MAX_UDP_PACKET:
@@ -142,21 +150,24 @@ sio = socketio.Client()
 
 @sio.event
 def connect():
-    print("✅ Connected to server")
+    print("âœ… Connected to server")
     sio.emit("join", {"room": robot_id})
 
 @sio.event
 def disconnect():
-    print("❌ Disconnected from server")
+    print("âŒ Disconnected from server")
 
 def start_socketio():
-    """Run the socket.io client in background thread"""
     try:
         print("Connecting to socket:", control_camera_url)
-        sio.connect(control_camera_url, transports=['websocket'])
+        sio.connect(
+            control_camera_url,
+            transports=['websocket', 'polling'],
+            socketio_path="socket.io"
+        )
         sio.wait()
     except Exception as e:
-        print("Socket.IO Error:", e)
+        print(f"Socket.IO Error to {control_camera_url}:", e)
 
 @sio.on('camera_action')
 def on_camera_action(data):

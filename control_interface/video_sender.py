@@ -27,7 +27,7 @@ robot_id = os.getenv("ID_ROBOT")
 backend_url = os.getenv("BE_URL")
 control_camera_url = os.getenv("CONTROL_CAMERA_URL")
 
-UDP_IP = "192.168.2.113" # IP must match that of the receiver
+UDP_IP = "192.168.0.17" # IP must match that of the receiver
 UDP_PORT = 5005 # Must match the port defined in control_interface.py
 MAX_UDP_PACKET = 65000
 
