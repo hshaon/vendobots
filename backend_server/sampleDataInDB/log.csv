@@ -1,0 +1,343 @@
+34,1,Starting Record,2025-11-11 13:06:13.847743
+35,1,Starting Record,2025-11-11 13:13:31.039588
+36,1,Canceled transaction and stop record by camera!,2025-11-11 13:15:22.030114
+37,1,Starting Record,2025-11-11 13:31:04.697383
+38,1,Starting Record,2025-11-11 21:21:44.764311
+39,1,Canceled transaction and stop record by camera!,2025-11-11 21:22:45.438314
+40,1,Starting Record,2025-11-11 21:25:25.602423
+41,1,Canceled transaction and stop record by camera!,2025-11-11 21:26:09.95368
+42,1,Starting Record,2025-11-11 21:27:45.972061
+43,1,Canceled transaction and stop record by camera!,2025-11-11 21:28:25.070614
+44,1,Starting Record,2025-11-11 21:29:29.351916
+45,1,Starting Record,2025-11-11 21:30:04.957229
+46,1,Canceled transaction and stop record by camera!,2025-11-11 21:30:08.38964
+47,1,Starting Record,2025-11-11 21:32:33.485626
+48,1,Canceled transaction and stop record by camera!,2025-11-11 21:33:16.49003
+49,1,Starting Record,2025-11-11 21:34:23.399035
+50,1,Creating transaction successful and stop record by camera!,2025-11-11 21:34:50.544842
+51,1,Starting Record,2025-11-11 21:34:59.115402
+52,1,Starting Record,2025-11-11 21:35:30.185159
+53,1,Canceled transaction and stop record by camera!,2025-11-11 21:35:37.41609
+54,1,Starting Record,2025-11-11 21:35:55.021898
+55,1,Canceled transaction and stop record by camera!,2025-11-11 21:36:36.033583
+56,1,Starting Record,2025-11-11 21:38:12.649056
+57,1,Starting Record,2025-11-11 21:38:52.289774
+58,1,Starting Record,2025-11-11 21:40:57.01891
+59,1,Starting Record,2025-11-11 21:41:23.481099
+60,1,Creating transaction successful and stop record by camera!,2025-11-11 21:41:57.337542
+61,1,Starting Record,2025-11-21 14:14:51.352798
+62,1,Staying in OrderScreen & opening Camera,2025-11-21 14:14:52.306852
+63,1,Staying in CartScreen,2025-11-21 14:15:09.825806
+64,1,Staying in PaymentScreen,2025-11-21 14:15:12.529438
+65,1,Creating transaction fail and stop record by camera!,2025-11-21 14:15:23.402211
+66,1,Creating transaction successful and stop record by camera!,2025-11-21 14:15:23.408104
+67,1,Staying in FirstScreen & opening Camera,2025-11-21 14:15:23.485372
+68,1,Starting Record,2025-11-21 14:19:13.455861
+69,1,Staying in OrderScreen & opening Camera,2025-11-21 14:19:14.284793
+70,1,Staying in CartScreen,2025-11-21 14:19:19.221
+71,1,Staying in PaymentScreen,2025-11-21 14:19:21.78832
+72,1,Creating transaction fail and stop record by camera!,2025-11-21 14:19:24.731536
+73,1,Creating transaction successful and stop record by camera!,2025-11-21 14:19:33.312711
+74,1,Staying in FirstScreen & opening Camera,2025-11-21 14:19:33.33022
+75,1,Starting Record,2025-11-21 14:20:59.642388
+76,1,Staying in OrderScreen & opening Camera,2025-11-21 14:21:00.495088
+77,1,Staying in CartScreen,2025-11-21 14:21:06.596334
+78,1,Staying in PaymentScreen,2025-11-21 14:21:10.536409
+79,1,Creating transaction successful and stop record by camera!,2025-11-21 14:21:20.147092
+80,1,Staying in FirstScreen & opening Camera,2025-11-21 14:21:20.159589
+81,1,Starting Record,2025-11-21 14:23:12.467399
+82,1,Staying in OrderScreen & opening Camera,2025-11-21 14:23:13.498955
+83,1,Staying in CartScreen,2025-11-21 14:23:21.551026
+84,1,Staying in PaymentScreen,2025-11-21 14:23:24.410865
+85,1,Creating transaction successful and stop record by camera!,2025-11-21 14:23:35.226686
+86,1,Staying in FirstScreen & opening Camera,2025-11-21 14:23:35.237116
+87,1,Starting Record,2025-11-21 14:26:24.512204
+88,1,Staying in OrderScreen & opening Camera,2025-11-21 14:26:25.460904
+89,1,Staying in CartScreen,2025-11-21 14:26:31.070297
+90,1,Staying in PaymentScreen,2025-11-21 14:26:33.904156
+91,1,Creating transaction successful and stop record by camera!,2025-11-21 14:26:37.182571
+92,1,Staying in FirstScreen & opening Camera,2025-11-21 14:26:45.952959
+93,1,Starting Record,2025-11-21 15:37:06.503485
+94,1,Staying in OrderScreen & opening Camera,2025-11-21 15:37:07.805212
+95,1,Staying in CartScreen,2025-11-21 15:37:15.739264
+96,1,Staying in PaymentScreen,2025-11-21 15:37:17.954121
+97,1,Creating transaction successful and stop record by camera!,2025-11-21 15:37:37.317894
+98,1,Staying in FirstScreen & opening Camera,2025-11-21 15:37:37.35973
+99,1,Staying in FirstScreen & opening Camera,2025-11-21 15:44:43.174202
+100,1,Starting Record,2025-11-21 15:44:56.593032
+101,1,Staying in OrderScreen & opening Camera,2025-11-21 15:44:58.465699
+102,1,Staying in CartScreen,2025-11-21 15:45:03.078551
+103,1,Staying in PaymentScreen,2025-11-21 15:45:05.459278
+104,1,Creating transaction successful and stop record by camera!,2025-11-21 15:45:24.190092
+105,1,Staying in FirstScreen & opening Camera,2025-11-21 15:45:24.204599
+106,1,Staying in FirstScreen & opening Camera,2025-11-21 15:50:26.730468
+107,1,Starting Record,2025-11-21 15:50:42.028924
+108,1,Staying in OrderScreen & opening Camera,2025-11-21 15:50:43.852922
+109,1,Staying in CartScreen,2025-11-21 15:50:50.456972
+110,1,Staying in PaymentScreen,2025-11-21 15:50:55.711473
+111,1,Creating transaction successful and stop record by camera!,2025-11-21 15:50:58.042453
+112,1,Staying in FirstScreen & opening Camera,2025-11-21 15:51:11.075344
+113,1,Staying in FirstScreen & opening Camera,2025-11-21 17:24:53.584222
+114,1,Starting Record,2025-11-21 17:25:30.12855
+115,1,Staying in OrderScreen & opening Camera,2025-11-21 17:25:31.46627
+116,1,Staying in CartScreen,2025-11-21 17:25:39.465853
+117,1,Staying in PaymentScreen,2025-11-21 17:25:42.314433
+118,1,Creating transaction fail and stop record by camera!,2025-11-21 17:25:57.861548
+119,1,Creating transaction successful and stop record by camera!,2025-11-21 17:25:57.867633
+120,1,Staying in FirstScreen & opening Camera,2025-11-21 17:25:57.904139
+121,1,Starting Record,2025-11-21 17:30:04.999764
+122,1,Staying in OrderScreen & opening Camera,2025-11-21 17:30:06.572633
+123,1,Staying in CartScreen,2025-11-21 17:30:11.48085
+124,1,Staying in PaymentScreen,2025-11-21 17:30:13.728308
+125,1,Creating transaction fail and stop record by camera!,2025-11-21 17:30:16.945
+126,1,Creating transaction successful and stop record by camera!,2025-11-21 17:30:16.950057
+127,1,Staying in FirstScreen & opening Camera,2025-11-21 17:30:30.696991
+128,1,Staying in FirstScreen & opening Camera,2025-11-21 17:33:19.742354
+129,1,Starting Record,2025-11-21 17:33:32.957971
+130,1,Staying in OrderScreen & opening Camera,2025-11-21 17:33:34.918488
+131,1,Staying in CartScreen,2025-11-21 17:33:39.318281
+132,1,Staying in OrderScreen & opening Camera,2025-11-21 17:33:47.33187
+133,1,Staying in CartScreen,2025-11-21 17:33:50.33564
+134,1,Staying in PaymentScreen,2025-11-21 17:33:52.186381
+138,1,Staying in FirstScreen & opening Camera,2025-11-21 17:38:27.948209
+135,1,Creating transaction fail and stop record by camera!,2025-11-21 17:34:17.458176
+136,1,Creating transaction successful and stop record by camera!,2025-11-21 17:34:17.500649
+137,1,Staying in FirstScreen & opening Camera,2025-11-21 17:34:17.529941
+141,1,Staying in CartScreen,2025-11-21 17:39:07.598639
+142,1,Staying in PaymentScreen,2025-11-21 17:39:09.775288
+143,1,Creating transaction fail and stop record by camera!,2025-11-21 17:39:11.539408
+144,1,Creating transaction successful and stop record by camera!,2025-11-21 17:39:11.543079
+139,1,Starting Record,2025-11-21 17:39:00.856346
+140,1,Staying in OrderScreen & opening Camera,2025-11-21 17:39:03.135818
+145,1,Staying in FirstScreen & opening Camera,2025-11-21 17:39:22.770024
+146,1,Starting Record,2025-11-21 17:40:46.397628
+147,1,Staying in OrderScreen & opening Camera,2025-11-21 17:40:47.814863
+148,1,Staying in CartScreen,2025-11-21 17:40:53.08997
+149,1,Staying in PaymentScreen,2025-11-21 17:40:55.917087
+150,1,Creating transaction successful and stop record by camera!,2025-11-21 17:41:09.022815
+151,1,Staying in FirstScreen & opening Camera,2025-11-21 17:41:09.042759
+152,1,Staying in FirstScreen & opening Camera,2025-11-21 17:44:03.053648
+153,1,Starting Record,2025-11-21 17:44:18.112719
+154,1,Staying in OrderScreen & opening Camera,2025-11-21 17:44:18.67389
+155,1,Staying in CartScreen,2025-11-21 17:44:23.693344
+156,1,Staying in PaymentScreen,2025-11-21 17:44:26.657789
+157,1,Creating transaction successful and stop record by camera!,2025-11-21 17:44:28.377186
+158,1,Staying in FirstScreen & opening Camera,2025-11-21 17:44:39.687761
+159,1,Staying in FirstScreen & opening Camera,2025-11-21 17:47:19.935285
+160,1,Starting Record,2025-11-21 17:47:40.792659
+161,1,Staying in OrderScreen & opening Camera,2025-11-21 17:47:43.048406
+162,1,Staying in CartScreen,2025-11-21 17:47:47.806051
+163,1,Staying in PaymentScreen,2025-11-21 17:47:50.254328
+164,1,Creating transaction successful and stop record by camera!,2025-11-21 17:47:53.129995
+165,1,Staying in FirstScreen & opening Camera,2025-11-21 17:48:28.957423
+166,1,Canceled transaction and stop record by camera!,2025-11-21 17:48:28.972747
+167,1,Staying in FirstScreen & opening Camera,2025-11-21 17:48:56.216834
+168,1,Starting Record,2025-11-21 17:50:04.777933
+169,1,Staying in OrderScreen & opening Camera,2025-11-21 17:50:07.761448
+170,1,Staying in CartScreen,2025-11-21 17:50:13.858647
+171,1,Staying in PaymentScreen,2025-11-21 17:50:15.394846
+172,1,Creating transaction successful and stop record by camera!,2025-11-21 17:50:17.274262
+173,1,Staying in FirstScreen & opening Camera,2025-11-21 17:50:51.646965
+174,1,Canceled transaction and stop record by camera!,2025-11-21 17:50:51.656
+175,1,Staying in FirstScreen & opening Camera,2025-11-21 17:52:59.687079
+176,1,Starting Record,2025-11-21 17:53:16.962325
+177,1,Staying in OrderScreen & opening Camera,2025-11-21 17:53:18.67952
+178,1,Staying in CartScreen,2025-11-21 17:53:22.47664
+179,1,Staying in PaymentScreen,2025-11-21 17:53:25.140123
+180,1,Creating transaction successful and stop record by camera!,2025-11-21 17:53:53.492387
+181,1,Staying in FirstScreen & opening Camera,2025-11-21 17:53:53.535327
+182,1,Starting Record,2025-11-21 18:00:10.72904
+183,1,Staying in OrderScreen & opening Camera,2025-11-21 18:00:11.75591
+184,1,Staying in CartScreen,2025-11-21 18:00:18.588303
+185,1,Staying in PaymentScreen,2025-11-21 18:00:21.972151
+186,1,Creating transaction successful and stop record by camera!,2025-11-21 18:00:34.211984
+187,1,Staying in FirstScreen & opening Camera,2025-11-21 18:00:34.221704
+188,1,Starting Record,2025-11-21 18:00:51.664069
+189,1,Staying in OrderScreen & opening Camera,2025-11-21 18:00:52.912954
+190,1,Staying in CartScreen,2025-11-21 18:00:57.361627
+191,1,Staying in PaymentScreen,2025-11-21 18:00:59.111934
+192,1,Creating transaction successful and stop record by camera!,2025-11-21 18:01:13.449757
+193,1,Staying in FirstScreen & opening Camera,2025-11-21 18:01:13.463039
+194,1,Starting Record,2025-11-21 18:03:58.503792
+195,1,Staying in OrderScreen & opening Camera,2025-11-21 18:03:59.404339
+196,1,Staying in CartScreen,2025-11-21 18:04:03.883667
+197,1,Staying in PaymentScreen,2025-11-21 18:04:05.604446
+198,1,Creating transaction successful and stop record by camera!,2025-11-21 18:04:15.778176
+199,1,Staying in FirstScreen & opening Camera,2025-11-21 18:04:15.798997
+200,1,Starting Record,2025-11-21 18:04:26.117495
+201,1,Staying in OrderScreen & opening Camera,2025-11-21 18:04:27.290684
+202,1,Staying in CartScreen,2025-11-21 18:04:31.133081
+203,1,Staying in PaymentScreen,2025-11-21 18:04:32.664611
+204,1,Creating transaction successful and stop record by camera!,2025-11-21 18:04:42.937131
+205,1,Staying in FirstScreen & opening Camera,2025-11-21 18:04:42.951597
+206,1,Staying in FirstScreen & opening Camera,2025-11-24 13:43:33.612611
+207,1,Starting Record,2025-11-24 13:43:44.728767
+208,1,Staying in OrderScreen & opening Camera,2025-11-24 13:43:46.10865
+209,1,Staying in CartScreen,2025-11-24 13:43:49.986902
+210,1,Staying in OrderScreen & opening Camera,2025-11-24 13:43:54.328592
+211,1,Staying in CartScreen,2025-11-24 13:44:01.53072
+212,1,Staying in PaymentScreen,2025-11-24 13:44:03.756957
+213,1,Creating transaction successful and stop record by camera!,2025-11-24 13:44:09.022817
+214,1,Staying in FirstScreen & opening Camera,2025-11-24 13:44:25.833498
+215,1,Starting Record,2025-11-24 13:47:54.951219
+216,1,Staying in OrderScreen & opening Camera,2025-11-24 13:47:56.079692
+217,1,Staying in CartScreen,2025-11-24 13:48:02.631911
+218,1,Staying in PaymentScreen,2025-11-24 13:48:04.505727
+219,1,Creating transaction successful and stop record by camera!,2025-11-24 13:48:09.588115
+220,1,Staying in FirstScreen & opening Camera,2025-11-24 13:48:34.278488
+221,1,Starting Record,2025-11-24 15:46:44.928113
+222,1,Staying in OrderScreen & opening Camera,2025-11-24 15:46:46.705989
+223,1,Staying in CartScreen,2025-11-24 15:46:54.785351
+224,1,Staying in PaymentScreen,2025-11-24 15:47:01.313218
+225,1,Creating transaction successful and stop record by camera!,2025-11-24 15:47:22.857638
+226,1,Staying in FirstScreen & opening Camera,2025-11-24 15:47:22.876517
+227,1,Starting Record,2025-11-24 15:51:20.609643
+228,1,Staying in OrderScreen & opening Camera,2025-11-24 15:51:22.404428
+229,1,Staying in CartScreen,2025-11-24 15:51:28.195717
+230,1,Staying in PaymentScreen,2025-11-24 15:51:29.609316
+231,1,Canceled transaction and stop record by camera!,2025-11-24 15:52:00.774572
+232,1,Staying in FirstScreen & opening Camera,2025-11-24 15:52:13.323675
+233,1,Starting Record,2025-11-24 16:38:36.433929
+234,1,Staying in CartScreen,2025-11-24 16:38:48.080853
+235,1,Staying in CartScreen,2025-11-24 16:39:00.347132
+236,1,Staying in PaymentScreen,2025-11-24 16:39:01.82452
+237,1,Canceled transaction and stop record by camera!,2025-11-24 16:39:31.870708
+238,1,Starting Record,2025-11-24 16:44:23.2285
+239,1,Staying in CartScreen,2025-11-24 16:44:30.991912
+240,1,Staying in PaymentScreen,2025-11-24 16:44:33.036704
+241,1,Canceled transaction and stop record by camera!,2025-11-24 16:45:03.1165
+242,1,Starting Record,2025-11-24 16:46:51.710109
+243,1,Staying in CartScreen,2025-11-24 16:47:00.424284
+244,1,Canceled transaction and stop record by camera!,2025-11-24 16:47:30.196095
+245,1,Starting Record,2025-11-24 16:49:19.464774
+246,1,Staying in CartScreen,2025-11-24 16:49:28.289326
+247,1,Staying in PaymentScreen,2025-11-24 16:49:30.701161
+248,1,Canceled transaction and stop record by camera!,2025-11-24 16:50:00.663322
+249,1,Starting Record,2025-11-24 16:59:34.120758
+254,1,Staying in CartScreen,2025-11-24 17:00:29.637491
+255,1,Staying in PaymentScreen,2025-11-24 17:00:31.886176
+256,1,Canceled transaction and stop record by camera!,2025-11-24 17:01:04.290984
+257,1,Starting Record,2025-11-24 17:02:24.755971
+262,1,Staying in CartScreen,2025-11-24 17:06:33.869001
+263,1,Staying in PaymentScreen,2025-11-24 17:06:36.504886
+264,1,Canceled transaction and stop record by camera!,2025-11-24 17:07:06.79151
+265,1,Starting Record,2025-11-24 17:34:57.664487
+270,1,Staying in CartScreen,2025-11-24 17:43:28.35976
+271,1,Staying in PaymentScreen,2025-11-24 17:43:30.176606
+272,1,Canceled transaction and stop record by camera!,2025-11-24 17:44:00.22845
+273,1,Starting Record,2025-11-24 17:53:21.212371
+250,1,Staying in CartScreen,2025-11-24 16:59:40.486661
+251,1,Staying in PaymentScreen,2025-11-24 16:59:42.222647
+252,1,Creating transaction successful and stop record by camera!,2025-11-24 16:59:57.480325
+253,1,Starting Record,2025-11-24 17:00:22.806369
+258,1,Staying in CartScreen,2025-11-24 17:02:30.588855
+259,1,Staying in PaymentScreen,2025-11-24 17:02:32.565004
+260,1,Canceled transaction and stop record by camera!,2025-11-24 17:03:02.861249
+261,1,Starting Record,2025-11-24 17:06:25.72272
+266,1,Staying in CartScreen,2025-11-24 17:36:40.295226
+267,1,Staying in PaymentScreen,2025-11-24 17:36:43.327751
+268,1,Canceled transaction and stop record by camera!,2025-11-24 17:37:13.158353
+269,1,Starting Record,2025-11-24 17:43:20.151059
+274,1,Staying in CartScreen,2025-11-24 17:53:26.158479
+275,1,Staying in PaymentScreen,2025-11-24 17:53:28.607257
+276,1,Canceled transaction and stop record by camera!,2025-11-24 17:53:58.209962
+277,1,Starting Record,2025-11-24 17:59:35.925886
+278,1,Staying in CartScreen,2025-11-24 17:59:43.928309
+279,1,Staying in PaymentScreen,2025-11-24 17:59:50.774127
+280,1,Canceled transaction and stop record by camera!,2025-11-24 18:00:21.895333
+281,1,Starting Record,2025-11-24 21:21:40.395238
+282,1,Staying in CartScreen,2025-11-24 21:21:46.540662
+283,1,Staying in PaymentScreen,2025-11-24 21:21:49.065111
+284,1,Canceled transaction and stop record by camera!,2025-11-24 21:22:29.38761
+285,1,Starting Record,2025-11-24 21:27:34.994838
+286,1,Starting Record,2025-11-24 21:30:04.89988
+287,1,Staying in CartScreen,2025-11-24 21:30:11.295248
+288,1,Staying in PaymentScreen,2025-11-24 21:30:13.5961
+289,1,Canceled transaction and stop record by camera!,2025-11-24 21:30:51.196619
+290,1,Starting Record,2025-11-24 21:34:17.448605
+291,1,Staying in CartScreen,2025-11-24 21:34:24.565476
+292,1,Staying in PaymentScreen,2025-11-24 21:34:27.018179
+293,1,Canceled transaction and stop record by camera!,2025-11-24 21:34:57.114422
+294,1,Starting Record,2025-11-24 21:43:17.88363
+295,1,Staying in CartScreen,2025-11-24 21:43:26.783992
+296,1,Staying in PaymentScreen,2025-11-24 21:43:29.035139
+297,1,Canceled transaction and stop record by camera!,2025-11-24 21:43:58.960394
+298,1,Starting Record,2025-11-24 21:48:50.63268
+299,1,Staying in CartScreen,2025-11-24 21:48:55.623356
+300,1,Staying in PaymentScreen,2025-11-24 21:48:58.887254
+301,1,Canceled transaction and stop record by camera!,2025-11-24 21:49:28.880487
+302,1,Starting Record,2025-11-24 21:52:31.946175
+303,1,Staying in CartScreen,2025-11-24 21:52:38.751396
+304,1,Staying in PaymentScreen,2025-11-24 21:52:41.500207
+305,1,Canceled transaction and stop record by camera!,2025-11-24 21:53:11.571844
+306,1,Starting Record,2025-11-24 22:14:18.107381
+307,1,Staying in CartScreen,2025-11-24 22:14:23.793991
+308,1,Staying in PaymentScreen,2025-11-24 22:14:26.104024
+309,1,Canceled transaction and stop record by camera!,2025-11-24 22:14:55.714493
+310,1,Starting Record,2025-11-24 22:17:36.599105
+311,1,Staying in CartScreen,2025-11-24 22:17:44.315465
+312,1,Staying in PaymentScreen,2025-11-24 22:17:47.021552
+313,1,Canceled transaction and stop record by camera!,2025-11-24 22:18:16.305618
+314,1,Starting Record,2025-11-24 22:19:32.574049
+315,1,Staying in CartScreen,2025-11-24 22:19:46.354254
+316,1,Staying in PaymentScreen,2025-11-24 22:19:49.246467
+317,1,Canceled transaction and stop record by camera!,2025-11-24 22:20:28.048739
+318,1,Starting Record,2025-11-24 22:24:50.518088
+319,1,Staying in CartScreen,2025-11-24 22:24:56.603772
+320,1,Staying in PaymentScreen,2025-11-24 22:24:59.456884
+321,1,Canceled transaction and stop record by camera!,2025-11-24 22:25:29.420027
+322,1,Starting Record,2025-11-24 22:26:37.774118
+323,1,Staying in CartScreen,2025-11-24 22:26:43.559445
+324,1,Staying in PaymentScreen,2025-11-24 22:26:50.673115
+325,1,Starting Record,2025-11-24 22:31:47.145271
+326,1,Staying in CartScreen,2025-11-24 22:31:53.00413
+327,1,Staying in PaymentScreen,2025-11-24 22:31:55.110516
+328,1,Canceled transaction and stop record by camera!,2025-11-24 22:32:45.539903
+329,1,Starting Record,2025-11-24 22:35:12.829729
+330,1,Staying in CartScreen,2025-11-24 22:35:18.124278
+331,1,Staying in PaymentScreen,2025-11-24 22:35:19.747654
+332,1,Starting Record,2025-11-24 22:37:16.502397
+333,1,Staying in CartScreen,2025-11-24 22:37:22.248551
+334,1,Staying in PaymentScreen,2025-11-24 22:37:24.488818
+335,1,Canceled transaction and stop record by camera!,2025-11-24 22:38:18.257928
+336,1,Starting Record,2025-11-25 09:11:04.87385
+337,1,Starting Record,2025-11-25 09:12:42.112017
+338,1,Starting Record,2025-11-25 09:23:11.955947
+339,1,Starting Record,2025-11-25 09:26:38.285854
+340,1,Staying in CartScreen,2025-11-25 09:26:48.320266
+341,1,Staying in PaymentScreen,2025-11-25 09:26:50.885529
+342,1,Creating transaction successful and stop record by camera!,2025-11-25 09:26:59.093858
+343,1,Canceled transaction and stop record by camera!,2025-11-25 09:28:03.455704
+344,1,Starting Record,2025-11-25 09:38:14.591387
+345,1,Staying in CartScreen,2025-11-25 09:38:20.771349
+346,1,Staying in PaymentScreen,2025-11-25 09:38:22.975036
+347,1,Canceled transaction and stop record by camera!,2025-11-25 09:38:58.13577
+348,1,Starting Record,2025-11-25 09:41:08.182721
+349,1,Staying in CartScreen,2025-11-25 09:41:20.390814
+350,1,Staying in PaymentScreen,2025-11-25 09:41:23.080911
+351,1,Starting Record,2025-11-25 09:45:26.898448
+352,1,Staying in CartScreen,2025-11-25 09:45:34.04621
+353,1,Staying in PaymentScreen,2025-11-25 09:45:36.909533
+354,1,Canceled transaction and stop record by camera!,2025-11-25 09:45:38.185091
+355,1,Starting Record,2025-11-25 09:54:51.27254
+356,1,Staying in CartScreen,2025-11-25 09:54:58.867676
+357,1,Staying in PaymentScreen,2025-11-25 09:55:02.93696
+358,1,Canceled transaction and stop record by camera!,2025-11-25 09:55:05.219972
+359,1,Starting Record,2025-11-25 10:00:04.675439
+360,1,Staying in CartScreen,2025-11-25 10:00:10.063348
+361,1,Staying in PaymentScreen,2025-11-25 10:00:12.683839
+362,1,Canceled transaction and stop record by camera!,2025-11-25 10:00:17.735018
+363,1,Starting Record,2025-11-25 10:04:42.26646
+364,1,Staying in CartScreen,2025-11-25 10:04:47.56545
+365,1,Staying in PaymentScreen,2025-11-25 10:04:49.253389
+366,1,Creating transaction successful and stop record by camera!,2025-11-25 10:04:50.668684
+367,1,Canceled transaction and stop record by camera!,2025-11-25 10:04:50.986393
+368,1,Starting Record,2025-11-25 10:10:10.476674
+369,1,Starting Record,2025-11-25 10:15:00.064949
+370,1,Staying in CartScreen,2025-11-25 10:15:12.421948
+371,1,Staying in CartScreen,2025-11-25 10:15:57.538312
+374,1,Starting Record,2025-11-25 10:24:12.104373
+372,1,Canceled transaction and stop record by camera!,2025-11-25 10:16:28.231063
+373,1,Staying in PaymentScreen,2025-11-25 10:16:28.315781
+375,1,Staying in CartScreen,2025-11-25 10:25:14.579544
+376,1,Canceled transaction and stop record by camera!,2025-11-25 10:25:44.400679

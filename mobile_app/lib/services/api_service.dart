@@ -11,7 +11,7 @@ class ApiService {
   // This 'getter' automatically selects the correct IP address
   String get baseUrl {
     // Replace '192.168.1.15' with YOUR computer's actual local IP address
-    const String localServerIp = "10.22.27.115"; 
+    const String localServerIp = "192.168.2.129"; 
 
     if (kIsWeb) {
       return "http://localhost:8000"; // Web usually works with localhost if on same machine

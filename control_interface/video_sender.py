@@ -27,7 +27,7 @@ robot_id = os.getenv("ID_ROBOT")
 backend_url = os.getenv("BE_URL")
 control_camera_url = os.getenv("CONTROL_CAMERA_URL")
 
-UDP_IP = "10.22.49.84" # IP must match that of the receiver
+UDP_IP = "192.168.0.17" # IP must match that of the receiver
 UDP_PORT = 5005 # Must match the port defined in control_interface.py
 MAX_UDP_PACKET = 65000
 
@@ -42,7 +42,10 @@ videourl = None
 def start_record():
     global out, recording, save_path
     # Video output path
-    save_path = os.path.join(record_folder, f"{current_video_file.replace(" ","_").replace(":","_").replace("-","_")}.mp4")
+    save_path = os.path.join(
+    record_folder,
+    f"{current_video_file.replace(' ','_').replace(':','_').replace('-','_')}.mp4")
+
 
     # Initialize VideoWriter
     out = cv2.VideoWriter(save_path, fourcc, fps, (frame_width, frame_height))
@@ -70,7 +73,8 @@ def stop_record():
                 response.raise_for_status()  # raise exception for HTTP errors
                 print("Video URL sent successfully:")
                 
-                satisficationEvaluation(save_path)
+                thread = threading.Thread(target=satisficationEvaluation, args=(save_path,), daemon=True)
+                thread.start()
             except requests.RequestException as e:
                 print("Failed to send video URL:", e)
     recording = False

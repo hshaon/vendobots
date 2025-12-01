@@ -3,9 +3,11 @@ numpy
 opencv-python
 websocket-client
 python-socketio[client]
+dotenv
+python-dotenv
 
 torch
 torchvision
 Pillow
-dlib
+mediapipe
 requests

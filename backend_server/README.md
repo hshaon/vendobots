@@ -139,7 +139,7 @@ Note: The .gitignore file will prevent this file from being uploaded to GitHub.
 With your virtual environment still active, run uvicorn:
 
 uvicorn app.main:app --reload
-uvicorn app.main:app --host 10.8.124.47 --port 8000 --reload
+uvicorn app.main:app --reload --host 192.168.0.17 --port 8000
 
 (potentially need to set env variable with $env:DATABASE_URL="postgresql://postgres:102403@127.0.0.1:5432/vendor_bot"; uvicorn app.main:app --reload)
 
