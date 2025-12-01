@@ -5,8 +5,6 @@ import roslibpy
 
 ROBOT_IP = "192.168.2.115"
 ROBOT_PORT = 9090
-
-
 class Telemetry:
     def __init__(self):
         self._map_lock = threading.Lock()
