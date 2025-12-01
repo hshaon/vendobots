@@ -26,7 +26,6 @@ class _MapPageState extends State<MapPage> {
   Timer? _robotPositionTimer;
 
   // --- COORDINATE TRANSFORM DATA ---
-  // !! YOU MUST UPDATE THESE VALUES FROM YOUR SLAM MAP !!
   final double mapResolution = 0.05; // meters / pixel
   final double mapOriginX = -17.0; // meters
   final double mapOriginY = -29.7; // meters

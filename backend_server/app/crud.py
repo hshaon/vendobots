@@ -156,18 +156,45 @@ def create_log(db: Session, log: schemas.RobotLogCreate):
     return new_log
 
 def create_delivery_record(db: Session, record: schemas.DeliveryRecordCreate):
+    # 1. Generate Confirmation Code
     while True:
         code = f"{random.randint(0, 999999):06d}"
-        
-        # Check if this code is already in use for a 'WAITING' order
         existing = db.query(models.deliveryRecords).filter(
             models.deliveryRecords.confirmation_code == code,
             models.deliveryRecords.status == "WAITING"
         ).first()
-        
         if not existing:
             break
     
+    # 2. Update Inventory Quantities
+    try:
+        # Parse the CSV strings (e.g., "1,4" -> [1, 4])
+        if record.inventory_ids and record.quantity:
+            inv_ids = [int(id_str) for id_str in record.inventory_ids.split(',') if id_str.strip()]
+            quantities = [int(q_str) for q_str in record.quantity.split(',') if q_str.strip()]
+
+            if len(inv_ids) == len(quantities):
+                for i in range(len(inv_ids)):
+                    item_id = inv_ids[i]
+                    qty_to_remove = quantities[i]
+                    
+                    # Fetch item and update quantity
+                    db_item = db.query(models.InventoryItem).filter(models.InventoryItem.id == item_id).first()
+                    if db_item:
+                        # Ensure we don't go below zero
+                        if db_item.quantity >= qty_to_remove:
+                            db_item.quantity -= qty_to_remove
+                        else:
+                            db_item.quantity = 0
+            else:
+                print("Warning: Inventory IDs and Quantities length mismatch.")
+                
+    except Exception as e:
+        print(f"Error updating inventory counts: {e}")
+        # We don't rollback here because we still want to try creating the record,
+        # but in a production app, you might want to fail the order instead.
+
+    # 3. Create the Delivery Record
     new_record_data = record.model_dump()
     new_record_data['confirmation_code'] = code
     

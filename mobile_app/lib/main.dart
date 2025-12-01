@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'pages/dashboard_page.dart';
 import 'pages/map_page.dart';
 import 'pages/inventory_page.dart';
-import 'pages/settings_page.dart';
-import 'pages/control_page.dart';
+// Removed: import 'pages/settings_page.dart';
+// Removed: import 'pages/control_page.dart';
 
 void main() {
   runApp(const VendorBotApp());
@@ -36,12 +36,11 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   int _selectedIndex = 0;
 
+  // Removed ControlPage and SettingsPage from this list
   static final List<Widget> _pages = <Widget>[
     const DashboardPage(),
     const MapPage(),
     const InventoryPage(),
-    const ControlPage(),
-    const SettingsPage(),
   ];
 
   void _onItemTapped(int index) {
@@ -58,12 +57,20 @@ class _MainPageState extends State<MainPage> {
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedIndex,
         onDestinationSelected: _onItemTapped,
+        // Updated destinations list to match the pages above
         destinations: const [
-          NavigationDestination(icon: Icon(Icons.dashboard), label: 'Dashboard'),
-          NavigationDestination(icon: Icon(Icons.map), label: 'Map'),
-          NavigationDestination(icon: Icon(Icons.inventory), label: 'Inventory'),
-          NavigationDestination(icon: Icon(Icons.gamepad), label: 'Control'),
-          NavigationDestination(icon: Icon(Icons.settings), label: 'Settings'),
+          NavigationDestination(
+            icon: Icon(Icons.dashboard), 
+            label: 'Dashboard'
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.map), 
+            label: 'Map'
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.inventory), 
+            label: 'Inventory'
+          ),
         ],
       ),
     );
