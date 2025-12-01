@@ -58,11 +58,6 @@ class Telemetry:
 
         with self._pose_lock:
             self._latest_pose = (x, y, yaw_deg, speed)
-            
-        current_time = time.time()
-        if current_time - self.last_api_sync_time >= 1.0:
-            self._sync_to_backend(x, y)
-            self.last_api_sync_time = current_time
 
     def get_map(self):
         with self._map_lock:
