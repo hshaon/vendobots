@@ -206,6 +206,11 @@ class LiveFeedWidget(QWidget):
 
     def update_gui_frame(self, qimg):
         # Now in Qt main thread → safe to draw
+
+
+        # self.video_label.setPixmap(QPixmap.fromImage(qimg)) # uncomment if rectangular 
+
+        # code for rounded corner in live feed. Start------------
         pix = QPixmap.fromImage(qimg)
         rounded = QPixmap(pix.size())
         rounded.fill(Qt.transparent)
@@ -219,6 +224,7 @@ class LiveFeedWidget(QWidget):
         p.end()
 
         self.video_label.setPixmap(rounded)
+        # code for rounded corner in live feed. End---------------
 
     def closeEvent(self, event):
         self.pipeline.set_state(self.Gst.State.NULL)
