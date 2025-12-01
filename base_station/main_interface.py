@@ -1,4 +1,6 @@
 import sys
+import requests
+import time
 from PyQt5.QtGui import QPixmap, QPainter, QColor, QIcon, QPolygonF, QTransform, QImage, QPainterPath
 from PyQt5.QtCore import QSize, Qt, QTimer, QPointF, pyqtSignal
 from PyQt5.QtWidgets import (
@@ -9,6 +11,8 @@ from PyQt5.QtWidgets import (
 
 from send_movement import init_connection, send_cmd_vel, stop_robot
 
+API_BASE_URL = "http://127.0.0.1:8000" 
+ROBOT_ID = 1
 
 # ---------------------- Helper Card ----------------------
 
@@ -572,6 +576,11 @@ class MainWindow(QWidget):
 
         # Connect with ROS-Bridge
         init_connection()
+        
+        # map location connection
+        self.current_x = 0.0
+        self.current_y = 0.0
+        self.last_api_sync_time = 0
 
         # Telemetry backend (rosbridge)
         from telemetry import Telemetry
@@ -762,6 +771,27 @@ class MainWindow(QWidget):
                 tele.text.setText(
                     f"X: {x:.2f}\nY: {y:.2f}\nYaw: {yaw:.1f}°\nSpeed: {speed:.2f}"
                 )
+                
+            # We throttle this to once per second to avoid flooding the API
+            current_time = time.time()
+            if current_time - self.last_api_sync_time >= 1.0:
+                self.sync_to_backend(x, y)
+                self.last_api_sync_time = current_time
+
+    def sync_to_backend(self, x, y):
+        """Uploads current position to Backend DB so Mobile App can see it."""
+        try:
+            url = f"{API_BASE_URL}/robots/{ROBOT_ID}/position"
+            # We send standard coordinates. The Frontend map_page.dart handles any Y-inversion logic.
+            payload = {
+                "current_pos_x": x,
+                "current_pos_y": y
+            }
+            # Use a very short timeout to ensure the GUI doesn't freeze if server is slow
+            requests.put(url, json=payload, timeout=0.1)
+        except Exception:
+            # Fail silently to keep the GUI smooth
+            pass
 
 
     # ---------------- TELEOP LOGIC --------------------
