@@ -27,7 +27,7 @@ class _MapPageState extends State<MapPage> {
 
   // --- COORDINATE TRANSFORM DATA ---
   final double mapResolution = 0.05; // meters / pixel
-  final double mapOriginX = -17.0; // meters
+  final double mapOriginX = -17; // meters
   final double mapOriginY = -29.7; // meters
   // ------------------------------------
 
@@ -61,7 +61,6 @@ class _MapPageState extends State<MapPage> {
   void _updateRobotData(Robot robot) {
     setState(() {
       _robot = robot;
-      // Use the updated transformation logic
       robotPixel = _mapToPixel(
         Offset(_robot!.currentPosX, _robot!.currentPosY),
       );
@@ -125,7 +124,9 @@ class _MapPageState extends State<MapPage> {
       // return the selected logical (map) coordinates.
       Navigator.pop(context, destinationMap);
     } else {
-      // If we are in "view mode" (not picking), just show a snackbar
+      // If we are in "view mode" (not picking),
+      // we would create a delivery record.
+      // For now, just show a snackbar.
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
             content: Text(
@@ -134,12 +135,16 @@ class _MapPageState extends State<MapPage> {
     }
   }
 
-  @override
+@override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[900],
+      // 1. Darker background makes the map pop
+      backgroundColor: Colors.grey[900], 
       appBar: AppBar(
-        title: Text(widget.isPickerMode ? 'Select Location' : 'Robot Map'),
+        title: Text(
+          widget.isPickerMode ? 'Select Location' : 'Robot Map',
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
         backgroundColor: Colors.white.withOpacity(0.9),
         elevation: 0,
         foregroundColor: Colors.black87,
@@ -147,16 +152,17 @@ class _MapPageState extends State<MapPage> {
       ),
       extendBodyBehindAppBar: true,
       
-      // InteractiveViewer setup to fit the map nicely on screen
+      // 2. Constrained true ensures we start nicely fitted to the screen
       body: InteractiveViewer(
-        boundaryMargin: const EdgeInsets.all(100.0),
+        boundaryMargin: const EdgeInsets.all(100.0), // Allow panning a bit past edges
         minScale: 0.1,
         maxScale: 5.0,
-        constrained: true, 
+        constrained: true, // <--- CHANGE THIS BACK TO TRUE
         child: Center(
           child: FittedBox(
-            fit: BoxFit.contain, 
+            fit: BoxFit.contain, // <--- Auto-scales map to fit screen width/height
             child: Container(
+              // 3. Add a nice shadow to separate map from background
               decoration: BoxDecoration(
                 boxShadow: [
                   BoxShadow(
@@ -166,30 +172,32 @@ class _MapPageState extends State<MapPage> {
                   ),
                 ],
               ),
+              // This SizedBox ensures the Stack knows the exact size of your map image
+              // You might need to adjust these values to match your 'map.png' resolution exactly
+              // or remove SizedBox if Image.asset handles intrinsic size correctly.
               child: Stack(
                 children: [
-                  // --- The Map Image ---
                   GestureDetector(
                     onTapDown: _handleMapTap,
                     child: Image.asset(
                       'assets/images/map.png',
+                      // Remove fit: BoxFit.cover, allow natural size inside FittedBox
                     ),
                   ),
 
-                  // --- The Robot Marker ---
+                  // --- Markers (unchanged) ---
                   if (robotPixel != null)
                     Positioned(
                       left: robotPixel!.dx - 12, 
                       top: robotPixel!.dy - 12,
-                      child: _buildMarker(Colors.blue, "Robot ${_robot?.name ?? ''}"),
+                      child: _buildMarker(Colors.blue, "Robot"),
                     ),
 
-                  // --- The Destination Marker ---
                   if (destinationPixel != null)
                     Positioned(
                       left: destinationPixel!.dx - 12, 
                       top: destinationPixel!.dy - 12,
-                      child: _buildMarker(Colors.red, "Destination"),
+                      child: _buildMarker(Colors.red, "Dest"),
                     ),
                 ],
               ),
@@ -197,7 +205,8 @@ class _MapPageState extends State<MapPage> {
           ),
         ),
       ),
-
+      
+      // Floating Action Button for confirmation (looks cleaner than a Positioned button)
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: destinationPixel != null
           ? FloatingActionButton.extended(
@@ -212,6 +221,7 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
+  // Helper widget to make markers look nicer
   Widget _buildMarker(Color color, String label) {
     return Tooltip(
       message: label,
