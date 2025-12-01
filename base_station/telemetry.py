@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import math
 import threading
-import time
 import roslibpy
 
 ROBOT_IP = "192.168.2.115"
