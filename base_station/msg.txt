@@ -1,13 +1,14 @@
-atr-lab@localhost:~/Downloads/base_station$ /usr/bin/python3 main_interface.py
-QSocketNotifier: Can only be used with threads started with QThread
-[ROS] Connecting to rosbridge at 192.168.2.115:9090 ...
-[ROS] Connected & /cmd_vel publisher ready.
-[Telemetry] Connecting to rosbridge...
-/home/atr-lab/Downloads/base_station/main_interface.py:37: PyGIWarning: Gst was imported without specifying a version first. Use gi.require_version('Gst', '1.0') before import to ensure that the right version gets loaded.
-  from gi.repository import Gst, GLib
-[Telemetry] Connected.
-[Telemetry] /map received.
-[Main] Loading map now...
-[Map] Building image 626x966 ...
-[Map] Ready, rotated size = PyQt5.QtCore.QSize(966, 626)
+raceback (most recent call last):
+  File "/home/atr-lab/Downloads/base_station/main_int.py", line 1105, in <module>
+    main()
+  File "/home/atr-lab/Downloads/base_station/main_int.py", line 1099, in main
+    w = MainWindow()
+        ^^^^^^^^^^^^
+  File "/home/atr-lab/Downloads/base_station/main_int.py", line 572, in __init__
+    self.build_queue_tab()
+  File "/home/atr-lab/Downloads/base_station/main_int.py", line 703, in build_queue_tab
+    self.queue_table.setColumnCount(6)
+    ^^^^^^^^^^^^^^^^
+AttributeError: 'MainWindow' object has no attribute 'queue_table'. Did you mean: 'queue_tab'?
+atr-lab@localhost:~/Downloads/base_station$ ^C
 

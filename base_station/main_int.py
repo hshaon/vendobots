@@ -768,6 +768,7 @@ class MainWindow(QWidget):
             # Buttons depending on status
             if status == "NEW":
                 btn_start = QPushButton("Start Loading")
+                btn_start.setObjectName("QueueButton")
                 btn_start.setFixedHeight(28)
                 btn_start.clicked.connect(
                     lambda _, oid=order_id: self.set_order_status(oid, "LOADING")
@@ -777,6 +778,7 @@ class MainWindow(QWidget):
             elif status == "LOADING":
                 btn_ready = QPushButton("Mark Loaded")
                 btn_ready.setFixedHeight(28)
+                btn_ready.setObjectName("QueueButton")
                 btn_ready.clicked.connect(
                     lambda _, oid=order_id: self.set_order_status(oid, "READY")
                 )
@@ -784,6 +786,7 @@ class MainWindow(QWidget):
 
             elif status == "READY":
                 btn_dispatch = QPushButton("Dispatch")
+                btn_dispatch.setObjectName("QueueButton")
                 btn_dispatch.setFixedHeight(28)
                 btn_dispatch.clicked.connect(
                     lambda _, oid=order_id, x=dest_x, y=dest_y: self.dispatch_order(oid, x, y)
@@ -792,6 +795,7 @@ class MainWindow(QWidget):
 
             elif status == "IN_PROGRESS":
                 btn_delivered = QPushButton("Mark Delivered")
+                btn_delivered.setObjectName("QueueButton")
                 btn_delivered.setFixedHeight(28)
                 btn_delivered.clicked.connect(
                     lambda _, oid=order_id: self.set_order_status(oid, "DELIVERED")
@@ -1081,6 +1085,11 @@ class MainWindow(QWidget):
             outline: none;
             border: none;
         }
+        #QueueButton {
+            padding: 2px 12px;    
+            border-radius: 5px;
+        }
+
         """)
 
 
