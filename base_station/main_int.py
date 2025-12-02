@@ -17,11 +17,11 @@ from send_movement import init_connection, send_cmd_vel, stop_robot
 
 # Database & robot config ------------------------
 # TODO: adjust these to match your environment.
-DB_HOST = "localhost"
+DB_HOST = "192.168.2.129"
 DB_PORT = 5432
-DB_NAME = "your_db_name"
-DB_USER = "your_db_user"
-DB_PASSWORD = "your_db_password"
+DB_NAME = "vendor_bot"
+DB_USER = "postgres"
+DB_PASSWORD = "102403"
 
 ROBOT_ID = 1          # which robot_id this UI controls
 ROBOT_IP = "192.168.2.115"  # IP of the robot's ROS bridge (for send_goal)
