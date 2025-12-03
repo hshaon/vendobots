@@ -15,6 +15,24 @@ from PyQt5.QtWidgets import (
 
 from send_movement import init_connection, send_cmd_vel, stop_robot
 
+from PyQt5.QtCore import QThread
+
+class GoalSenderThread(QThread):
+    def __init__(self, sender, x, y, yaw):
+        super().__init__()
+        self.sender = sender
+        self.x = x
+        self.y = y
+        self.yaw = yaw
+
+    def run(self):
+        # Run RosGoalSender in background thread
+        try:
+            self.sender.send_goal(self.x, self.y, self.yaw)
+        except Exception as e:
+            print("[Dispatcher Thread] ERROR:", e)
+
+
 # Database & robot config ------------------------
 # TODO: adjust these to match your environment.
 DB_HOST = "192.168.2.129"
@@ -700,16 +718,22 @@ class MainWindow(QWidget):
         header.setStyleSheet("font-size: 20px; font-weight: 600; color: #333;")
         layout.addWidget(header)
 
+        # 1️⃣ CREATE TABLE FIRST
         self.queue_table = QTableWidget()
-        self.queue_table.setColumnCount(5)
+        self.queue_table.setColumnCount(6)
         self.queue_table.setHorizontalHeaderLabels(
-            ["Order ID", "Address", "Status", "Created At", "Actions"]
+            ["Order ID", "Address", "Location", "Status", "Created At", "Actions"]
         )
-        self.queue_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeToContents)
-        self.queue_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
-        self.queue_table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeToContents)
-        self.queue_table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeToContents)
-        self.queue_table.horizontalHeader().setSectionResizeMode(4, QHeaderView.ResizeToContents)
+
+        # Column sizes
+        header_view = self.queue_table.horizontalHeader()
+        header_view.setSectionResizeMode(0, QHeaderView.ResizeToContents)  # ID
+        header_view.setSectionResizeMode(1, QHeaderView.Stretch)           # Address
+        header_view.setSectionResizeMode(2, QHeaderView.Stretch)           # Location
+        header_view.setSectionResizeMode(3, QHeaderView.ResizeToContents)  # Status
+        header_view.setSectionResizeMode(4, QHeaderView.ResizeToContents)  # Created
+        header_view.setSectionResizeMode(5, QHeaderView.ResizeToContents)  # Actions
+
         self.queue_table.setEditTriggers(QTableWidget.NoEditTriggers)
         self.queue_table.setSelectionBehavior(QTableWidget.SelectRows)
         self.queue_table.setSelectionMode(QTableWidget.SingleSelection)
@@ -721,6 +745,7 @@ class MainWindow(QWidget):
             warn.setStyleSheet("color: #b00; font-size:14px;")
             layout.addWidget(warn)
 
+
     def refresh_delivery_queue(self):
         if self.db_conn is None:
             return
@@ -728,10 +753,10 @@ class MainWindow(QWidget):
         try:
             cur = self.db_conn.cursor()
             cur.execute("""
-                SELECT id, address, status, created_at, dest_pos_x, dest_pos_y
+                SELECT id, address, dest_pos_x, dest_pos_y, status, created_at
                 FROM delivery_records
                 WHERE robot_id = %s
-                  AND status IN ('NEW','LOADING','READY','IN_PROGRESS')
+                AND status IN ('NEW','LOADING','READY','IN_PROGRESS')
                 ORDER BY created_at ASC
             """, (ROBOT_ID,))
             rows = cur.fetchall()
@@ -743,7 +768,8 @@ class MainWindow(QWidget):
         self.queue_table.setRowCount(len(rows))
 
         for row_idx, row in enumerate(rows):
-            order_id, address, status, created_at, dest_x, dest_y = row
+            # Correct unpack order!
+            order_id, address, dest_x, dest_y, status, created_at = row
 
             # Column 0: ID
             self.queue_table.setItem(row_idx, 0, QTableWidgetItem(str(order_id)))
@@ -751,14 +777,32 @@ class MainWindow(QWidget):
             # Column 1: Address
             self.queue_table.setItem(row_idx, 1, QTableWidgetItem(address or ""))
 
-            # Column 2: Status
-            self.queue_table.setItem(row_idx, 2, QTableWidgetItem(status or ""))
+            # Column 2: Location
+            # Column 2: Location (address preferred, else coordinates, else Unknown)
+            if address and address.strip():
+                # Case: Text address exists (e.g., "Here!", "Map Selection")
+                loc_str = address.strip()
+            else:
+                # Case: No address → try coordinates
+                try:
+                    if dest_x is not None and dest_y is not None:
+                        loc_str = f"{float(dest_x):.2f}, {float(dest_y):.2f}"
+                    else:
+                        loc_str = "Unknown"
+                except:
+                    loc_str = "Unknown"
 
-            # Column 3: Created at
-            created_str = str(created_at) if created_at is not None else ""
-            self.queue_table.setItem(row_idx, 3, QTableWidgetItem(created_str))
+            self.queue_table.setItem(row_idx, 2, QTableWidgetItem(loc_str))
 
-            # Column 4: Actions
+
+            # Column 3: Status
+            self.queue_table.setItem(row_idx, 3, QTableWidgetItem(status or ""))
+
+            # Column 4: Created datetime
+            created_str = str(created_at) if created_at else ""
+            self.queue_table.setItem(row_idx, 4, QTableWidgetItem(created_str))
+
+            # Column 5: Actions
             actions_widget = QWidget()
             h = QHBoxLayout(actions_widget)
             h.setContentsMargins(0, 0, 0, 0)
@@ -769,7 +813,7 @@ class MainWindow(QWidget):
             if status == "NEW":
                 btn_start = QPushButton("Start Loading")
                 btn_start.setObjectName("QueueButton")
-                btn_start.setFixedHeight(28)
+                btn_start.setFixedHeight(30)
                 btn_start.clicked.connect(
                     lambda _, oid=order_id: self.set_order_status(oid, "LOADING")
                 )
@@ -777,8 +821,8 @@ class MainWindow(QWidget):
 
             elif status == "LOADING":
                 btn_ready = QPushButton("Mark Loaded")
-                btn_ready.setFixedHeight(28)
                 btn_ready.setObjectName("QueueButton")
+                btn_ready.setFixedHeight(30)
                 btn_ready.clicked.connect(
                     lambda _, oid=order_id: self.set_order_status(oid, "READY")
                 )
@@ -787,7 +831,7 @@ class MainWindow(QWidget):
             elif status == "READY":
                 btn_dispatch = QPushButton("Dispatch")
                 btn_dispatch.setObjectName("QueueButton")
-                btn_dispatch.setFixedHeight(28)
+                btn_dispatch.setFixedHeight(30)
                 btn_dispatch.clicked.connect(
                     lambda _, oid=order_id, x=dest_x, y=dest_y: self.dispatch_order(oid, x, y)
                 )
@@ -796,14 +840,15 @@ class MainWindow(QWidget):
             elif status == "IN_PROGRESS":
                 btn_delivered = QPushButton("Mark Delivered")
                 btn_delivered.setObjectName("QueueButton")
-                btn_delivered.setFixedHeight(28)
+                btn_delivered.setFixedHeight(30)
                 btn_delivered.clicked.connect(
                     lambda _, oid=order_id: self.set_order_status(oid, "DELIVERED")
                 )
                 h.addWidget(btn_delivered)
 
             h.addStretch()
-            self.queue_table.setCellWidget(row_idx, 4, actions_widget)
+            self.queue_table.setCellWidget(row_idx, 5, actions_widget)
+
 
     def set_order_status(self, order_id, new_status):
         if self.db_conn is None:
@@ -865,7 +910,10 @@ class MainWindow(QWidget):
         if self.goal_sender is not None:
             try:
                 self.log(f"[Queue] Dispatching order {order_id} → x={x:.2f}, y={y:.2f}, yaw={yaw_deg:.1f}")
-                self.goal_sender.send_goal(x, y, yaw_deg)
+                self.log(f"[Queue] Sending goal in background thread...")
+                #self.goal_sender.send_goal(x, y, yaw_deg)
+                thread = GoalSenderThread(self.goal_sender, x, y, yaw_deg)
+                thread.start()
             except Exception as e:
                 self.log(f"[Queue] ERROR dispatching goal for order {order_id}: {e}")
                 QMessageBox.critical(self, "Dispatch Error", str(e))
