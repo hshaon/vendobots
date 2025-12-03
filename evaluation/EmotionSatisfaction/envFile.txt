@@ -1,0 +1,8 @@
+ID_ROBOT=1
+BE_URL=http://192.168.2.129:8000
+CONTROL_CAMERA_URL = https://hricameratest.onrender.com
+#http://192.168.2.113:8000
+#192.168.0.17
+#http://10.8.124.47:8000
+#http://10.22.48.113:8000
+#conda activate py310
