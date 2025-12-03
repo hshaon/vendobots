@@ -11,6 +11,9 @@ class Telemetry:
         self._map_info = None
         self._map_data = None
         self._map_ready = False
+        self._nav_status_lock = threading.Lock()
+        self._nav_status = None
+
 
         self._pose_lock = threading.Lock()
         self._latest_pose = None
@@ -30,6 +33,20 @@ class Telemetry:
 
         odom_topic = roslibpy.Topic(self.ros, "/odom", "nav_msgs/Odometry")
         odom_topic.subscribe(self._handle_odom)
+        
+        status_topic = roslibpy.Topic(self.ros, "/move_base/status", "actionlib_msgs/GoalStatusArray")
+        status_topic.subscribe(self._handle_status)
+
+    def _handle_status(self, msg):
+        with self._nav_status_lock:
+            self._nav_status = msg
+
+    def get_nav_status(self):
+        with self._nav_status_lock:
+            return self._nav_status
+
+
+
 
     def _handle_map(self, msg):
         with self._map_lock:

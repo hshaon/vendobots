@@ -15,26 +15,7 @@ from PyQt5.QtWidgets import (
 
 from send_movement import init_connection, send_cmd_vel, stop_robot
 
-from PyQt5.QtCore import QThread
-
-class GoalSenderThread(QThread):
-    def __init__(self, sender, x, y, yaw):
-        super().__init__()
-        self.sender = sender
-        self.x = x
-        self.y = y
-        self.yaw = yaw
-
-    def run(self):
-        # Run RosGoalSender in background thread
-        try:
-            self.sender.send_goal(self.x, self.y, self.yaw)
-        except Exception as e:
-            print("[Dispatcher Thread] ERROR:", e)
-
-
 # Database & robot config ------------------------
-# TODO: adjust these to match your environment.
 DB_HOST = "192.168.2.129"
 DB_PORT = 5432
 DB_NAME = "vendor_bot"
@@ -42,7 +23,7 @@ DB_USER = "postgres"
 DB_PASSWORD = "102403"
 
 ROBOT_ID = 1          # which robot_id this UI controls
-ROBOT_IP = "192.168.2.115"  # IP of the robot's ROS bridge (for send_goal)
+ROBOT_IP = "192.168.2.115"  # IP of the robot's ROS bridge (for CLI send_goal if needed)
 
 # Try to import psycopg2 (PostgreSQL)
 try:
@@ -286,6 +267,7 @@ class MapViewWidget(QWidget):
 
         px_rot = (map_w - 1) - py_map
         py_rot = (map_h - 1) - px_map
+        #py_rot = px_map
 
         sx = scaled.width() / map_w
         sy = scaled.height() / map_h
@@ -517,6 +499,8 @@ class MainWindow(QWidget):
         # Telemetry backend (rosbridge)
         from telemetry import Telemetry
         self.telemetry = Telemetry()
+        self._last_nav_code = None
+
         self._map_loaded_from_telemetry = False
 
         # Poll telemetry in GUI thread
@@ -531,21 +515,16 @@ class MainWindow(QWidget):
         self.teleop_timer = QTimer(self)
         self.teleop_timer.timeout.connect(self.publish_continuous_cmd)
 
-        # Goal sender for navigation dispatch
+        # Goal sender for navigation dispatch (SHARED ROS CLIENT)
         self.goal_sender = None
         if RosGoalSender is not None:
             try:
-                # Adjust constructor args if your RosGoalSender differs
-                self.goal_sender = RosGoalSender(robot_ip=ROBOT_IP)
-                print("[Queue] RosGoalSender initialized.")
-            except TypeError:
-                # Fallback if constructor signature is different
-                try:
-                    self.goal_sender = RosGoalSender()
-                    print("[Queue] RosGoalSender initialized with default constructor.")
-                except Exception as e:
-                    print(f"[Queue] ERROR initializing RosGoalSender: {e}")
-                    self.goal_sender = None
+                # Use the SAME Ros connection as telemetry to avoid Twisted conflicts
+                self.goal_sender = RosGoalSender(ros=self.telemetry.ros)
+                print("[Queue] RosGoalSender initialized with shared ROS connection.")
+            except Exception as e:
+                print(f"[Queue] ERROR initializing RosGoalSender: {e}")
+                self.goal_sender = None
         else:
             print("[Queue] RosGoalSender not available; dispatch will only update DB.")
 
@@ -745,7 +724,6 @@ class MainWindow(QWidget):
             warn.setStyleSheet("color: #b00; font-size:14px;")
             layout.addWidget(warn)
 
-
     def refresh_delivery_queue(self):
         if self.db_conn is None:
             return
@@ -756,7 +734,7 @@ class MainWindow(QWidget):
                 SELECT id, address, dest_pos_x, dest_pos_y, status, created_at
                 FROM delivery_records
                 WHERE robot_id = %s
-                AND status IN ('NEW','LOADING','READY','IN_PROGRESS')
+                  AND status IN ('NEW','LOADING','READY','IN_PROGRESS')
                 ORDER BY created_at ASC
             """, (ROBOT_ID,))
             rows = cur.fetchall()
@@ -768,7 +746,6 @@ class MainWindow(QWidget):
         self.queue_table.setRowCount(len(rows))
 
         for row_idx, row in enumerate(rows):
-            # Correct unpack order!
             order_id, address, dest_x, dest_y, status, created_at = row
 
             # Column 0: ID
@@ -777,23 +754,18 @@ class MainWindow(QWidget):
             # Column 1: Address
             self.queue_table.setItem(row_idx, 1, QTableWidgetItem(address or ""))
 
-            # Column 2: Location
-            # Column 2: Location (address preferred, else coordinates, else Unknown)
+            # Column 2: Location (address preferred, else coords, else Unknown)
             if address and address.strip():
-                # Case: Text address exists (e.g., "Here!", "Map Selection")
                 loc_str = address.strip()
             else:
-                # Case: No address → try coordinates
                 try:
                     if dest_x is not None and dest_y is not None:
                         loc_str = f"{float(dest_x):.2f}, {float(dest_y):.2f}"
                     else:
                         loc_str = "Unknown"
-                except:
+                except Exception:
                     loc_str = "Unknown"
-
             self.queue_table.setItem(row_idx, 2, QTableWidgetItem(loc_str))
-
 
             # Column 3: Status
             self.queue_table.setItem(row_idx, 3, QTableWidgetItem(status or ""))
@@ -848,7 +820,6 @@ class MainWindow(QWidget):
 
             h.addStretch()
             self.queue_table.setCellWidget(row_idx, 5, actions_widget)
-
 
     def set_order_status(self, order_id, new_status):
         if self.db_conn is None:
@@ -906,14 +877,11 @@ class MainWindow(QWidget):
 
         yaw_deg = 0.0  # simple default; you can calculate based on path if needed
 
-        # Send goal via RosGoalSender (if available)
+        # Send goal via RosGoalSender (shared rosbridge)
         if self.goal_sender is not None:
             try:
                 self.log(f"[Queue] Dispatching order {order_id} → x={x:.2f}, y={y:.2f}, yaw={yaw_deg:.1f}")
-                self.log(f"[Queue] Sending goal in background thread...")
-                #self.goal_sender.send_goal(x, y, yaw_deg)
-                thread = GoalSenderThread(self.goal_sender, x, y, yaw_deg)
-                thread.start()
+                self.goal_sender.send_goal(x, y, yaw_deg)
             except Exception as e:
                 self.log(f"[Queue] ERROR dispatching goal for order {order_id}: {e}")
                 QMessageBox.critical(self, "Dispatch Error", str(e))
@@ -998,8 +966,82 @@ class MainWindow(QWidget):
             tele = self.findChild(TelemetryWidget)
             if tele:
                 tele.text.setText(
-                    f"X: {x:.2f}\nY: {y:.2f}\nYaw: {yaw:.1f}°\nSpeed: {speed:.2f}"
+                    f"X: {x:.2f}\nY: {y:.1f}°\nYaw: {yaw:.1f}°\nSpeed: {speed:.2f}"
                 )
+        
+        self.check_navigation_status()
+
+
+
+    def check_navigation_status(self):
+        msg = self.telemetry.get_nav_status()
+        if not msg:
+            return
+
+        status_list = msg.get("status_list", [])
+        if not status_list:
+            return
+
+        last = status_list[-1]
+        code = last.get("status", -1)
+        text = last.get("text", "")
+
+        # Only react if the status code CHANGED
+        if code == self._last_nav_code:
+            return
+
+        self._last_nav_code = code   # Update state
+
+        # ACTIVE
+        if code == 1:
+            self.log("[Nav] Robot is navigating to the target...")
+
+        # SUCCEEDED
+        elif code == 3:
+            self.log("[Nav] Robot reached its goal!")
+            self.auto_mark_delivered()
+
+        # FAILED
+        elif code in (4, 5):
+            self.log(f"[Nav] Navigation failed: {text}")
+            #self.auto_mark_failed()
+
+
+    
+    def auto_mark_delivered(self):
+        if not self.db_conn:
+            return
+
+        cur = self.db_conn.cursor()
+        cur.execute("""
+            UPDATE delivery_records
+            SET status='DELIVERED',
+                last_updated_at = CURRENT_TIMESTAMP
+            WHERE status='IN_PROGRESS' AND robot_id=%s
+        """, (ROBOT_ID,))
+        cur.close()
+
+        self.refresh_delivery_queue()
+        self.log("[Queue] Active delivery marked as DELIVERED.")
+
+
+    def auto_mark_failed(self):
+        if not self.db_conn:
+            return
+
+        cur = self.db_conn.cursor()
+        cur.execute("""
+            UPDATE delivery_records
+            SET status='FAILED',
+                last_updated_at = CURRENT_TIMESTAMP
+            WHERE status='FAILED' AND robot_id=%s
+        """, (ROBOT_ID,))
+        cur.close()
+
+        self.refresh_delivery_queue()
+        self.log("[Queue] Active delivery marked as FAILED.")
+
+
 
     # ---------------- TELEOP LOGIC --------------------
 
@@ -1133,11 +1175,11 @@ class MainWindow(QWidget):
             outline: none;
             border: none;
         }
+
         #QueueButton {
-            padding: 2px 12px;    
+            padding: 2px 12px;
             border-radius: 5px;
         }
-
         """)
 
 
