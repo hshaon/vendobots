@@ -32,7 +32,6 @@ fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 save_path = ""
 videourl = None
 
-
 #=============== RECORD FUNCTIONS ===============
 
 def start_record(fps, width, height):

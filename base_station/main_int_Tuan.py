@@ -1,15 +1,170 @@
 import sys
-from PyQt5.QtGui import QPixmap, QPainter, QColor, QIcon, QPolygonF, QTransform, QImage, QPainterPath
+from datetime import datetime
+import os
+import cv2
+import socketio
+import numpy as np
+from dotenv import load_dotenv
+import requests
+
+from PyQt5.QtGui import (
+    QPixmap, QPainter, QColor, QIcon, QPolygonF,
+    QTransform, QImage, QPainterPath
+)
 from PyQt5.QtCore import QSize, Qt, QTimer, QPointF, pyqtSignal
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QLabel, QPushButton, QToolButton, QTextEdit,
     QVBoxLayout, QHBoxLayout, QSlider, QFrame,
-    QLineEdit, QGraphicsDropShadowEffect, QSizePolicy
+    QLineEdit, QGraphicsDropShadowEffect, QSizePolicy,
+    QTabWidget, QTableWidget, QTableWidgetItem, QHeaderView, QMessageBox
 )
 
 from send_movement import init_connection, send_cmd_vel, stop_robot
 
+#===============setup Saving Folder===============
+current_folder = os.path.dirname(os.path.abspath(__file__))
+record_folder = os.path.join(current_folder, "transaction_records")
+current_video_file = None
 
+recording = False
+out = None
+statusRecording = None
+
+load_dotenv()
+
+robot_id = os.getenv("ID_ROBOT")
+backend_url = os.getenv("BE_URL")
+control_camera_url = os.getenv("CONTROL_CAMERA_URL")
+fourcc = cv2.VideoWriter_fourcc(*'mp4v') 
+save_path = ""
+videourl = None
+
+# Database & robot config ------------------------
+DB_HOST = "192.168.2.129"
+DB_PORT = 5432
+DB_NAME = "vendor_bot"
+DB_USER = "postgres"
+DB_PASSWORD = "102403"
+
+ROBOT_ID = 1          # which robot_id this UI controls
+ROBOT_IP = "192.168.2.115"  # IP of the robot's ROS bridge (for CLI send_goal if needed)
+
+# Try to import psycopg2 (PostgreSQL)
+video_streamer_width = 1200
+video_streamer_Height = 600
+
+try:
+    import psycopg2
+except ImportError:
+    psycopg2 = None
+    print("[Queue] WARNING: psycopg2 not installed. Delivery Queue will be disabled.")
+
+# Try to import RosGoalSender for navigation goals
+try:
+    from send_goal import RosGoalSender
+except ImportError:
+    RosGoalSender = None
+    print("[Queue] WARNING: send_goal.py (RosGoalSender) not found. Dispatch will only update DB, no nav goal will be sent.")
+
+#=============== RECORD FUNCTIONS ===============
+def start_record(fps, width, height):
+    global out, recording, save_path
+
+    save_path = os.path.join(
+        record_folder,
+        f"{current_video_file.replace(' ','_').replace(':','_').replace('-','_')}.mp4"
+    )
+
+    print("➡ Creating VideoWriter:", save_path)
+
+    out = cv2.VideoWriter(save_path, fourcc, fps, (width, height))
+
+    if not out.isOpened():
+        print("❌ Error: VideoWriter failed to open")
+    else:
+        print("🎥 Recording started!")
+
+    recording = True
+
+def stop_record():
+    global out, recording, statusRecording, videourl
+
+    print("🛑 Stopping recording...")
+
+    if out:
+        out.release()
+        out = None
+
+        if videourl != 'NONE':
+            send_videourl = videourl + "," + save_path
+            url = f"{backend_url}/deliveryRecord/updateVideoURL"
+            data = {"video_url": send_videourl}
+
+            try:
+                response = requests.post(url, json=data)
+                response.raise_for_status()
+                print("Video URL sent successfully.")
+
+                #thread = threading.Thread(target=satisficationEvaluation, args=(save_path,), daemon=True)
+                #thread.start()
+
+            except Exception as e:
+                print("Failed to send video URL:", e)
+
+    recording = False
+    statusRecording = None
+    print("Recording stopped.")
+
+
+#=============== SOCKET.IO ===============
+sio = socketio.Client()
+
+@sio.event
+def connect():
+    print("✅ Connected to server")
+    sio.emit("join", {"room": robot_id})
+
+
+@sio.event
+def disconnect():
+    print("❌ Disconnected from server")
+
+
+@sio.on('camera_action')
+def on_camera_action(data):
+    global current_video_file, videourl, statusRecording, recording
+
+    action = data.get('action')
+    receivedVideoUrl = data.get('videourl')
+
+    if action == "start":
+        num_files = len(os.listdir(record_folder))
+        now = datetime.now().replace(microsecond=0)
+        current_video_file = f"transaction{num_files + 1}_{now}"
+
+    videourl = receivedVideoUrl
+    statusRecording = action
+
+    print(f"📩 camera_action → {action}, videourl={videourl}")
+
+    # Trigger recording
+    if action == "start":
+        if not recording:
+            start_record(30, video_streamer_width, video_streamer_Height)
+
+    elif action == "stop":
+        if recording:
+            stop_record()
+
+
+def start_socketio():
+    print("Connecting to socket:", control_camera_url)
+    try:
+        sio.connect(control_camera_url, transports=['websocket'])
+        sio.wait()
+    except Exception as e:
+        print("Socket.IO Error:", e)
+        
 # ---------------------- Helper Card ----------------------
 
 class Card(QFrame):
@@ -30,107 +185,8 @@ class Card(QFrame):
 
 # ---------------------- Live Feed -------------------------
 
-# class LiveFeedWidget(QWidget):
-#     def __init__(self):
-#         super().__init__()
-
-#         #from gi.repository import Gst, GLib
-#         import gi
-#         gi.require_version("Gst", "1.0")
-#         from gi.repository import Gst, GLib
-#         import numpy as np
-
-#         self.Gst = Gst
-#         self.GLib = GLib
-#         self.np = np
-
-#         layout = QVBoxLayout(self)
-#         layout.setContentsMargins(0, 0, 0, 0)
-
-#         self.video_label = QLabel("Connecting...")
-#         self.video_label.setAlignment(Qt.AlignCenter)
-#         self.video_label.setScaledContents(True)
-#         self.video_label.setObjectName("VideoArea")
-#         layout.addWidget(self.video_label)
-
-#         # Initialize GStreamer
-#         Gst.init(None)
-
-#         # PIPELINE WORKS EXACTLY LIKE THE gst-launch VERSION
-#         pipeline_str = (
-#             "udpsrc port=5000 caps=\"application/x-rtp, media=video, encoding-name=H264, payload=96\" ! "
-#             "rtph264depay ! h264parse ! avdec_h264 ! videoconvert ! "
-#             "video/x-raw,format=RGB ! appsink name=appsink emit-signals=true sync=false max-buffers=1 drop=true"
-#         )
-
-#         self.pipeline = Gst.parse_launch(pipeline_str)
-
-#         self.appsink = self.pipeline.get_by_name("appsink")
-#         self.appsink.connect("new-sample", self.on_new_sample)
-
-#         self.pipeline.set_state(Gst.State.PLAYING)
-
-#         # Timer to keep GStreamer processing
-#         self.timer = QTimer(self)
-#         self.timer.timeout.connect(self.gst_step)
-#         self.timer.start(5)
-
-#     def gst_step(self):
-#         # Let GStreamer process internal messages (avoids freezes)
-#         bus = self.pipeline.get_bus()
-#         msg = bus.poll(self.Gst.MessageType.ANY, 0)
-#         # we ignore msg content; we only want the pump
-
-#     def on_new_sample(self, sink):
-#         sample = sink.emit("pull-sample")
-#         buf = sample.get_buffer()
-#         caps = sample.get_caps()
-#         w = caps.get_structure(0).get_value("width")
-#         h = caps.get_structure(0).get_value("height")
-
-#         success, map_info = buf.map(self.Gst.MapFlags.READ)
-#         if not success:
-#             return self.Gst.FlowReturn.ERROR
-
-#         frame = self.np.ndarray(
-#             shape=(h, w, 3),
-#             dtype=self.np.uint8,
-#             buffer=map_info.data
-#         )
-
-#         # Convert to QImage → QLabel
-#         qimg = QImage(frame.data, w, h, 3 * w, QImage.Format_RGB888)
-
-
-#         # self.video_label.setPixmap(QPixmap.fromImage(qimg)) # uncomment if rectanfular 
-
-#         # code for rounded corner in live feed. Start------------
-#         pix = QPixmap.fromImage(qimg)
-#         rounded = QPixmap(pix.size())
-#         rounded.fill(Qt.transparent)
-
-#         p = QPainter(rounded)
-#         p.setRenderHint(QPainter.Antialiasing)
-#         path = QPainterPath()
-#         path.addRoundedRect(0, 0, pix.width(), pix.height(), 24, 24)
-#         p.setClipPath(path)
-#         p.drawPixmap(0, 0, pix)
-#         p.end()
-
-#         self.video_label.setPixmap(rounded)
-#         # code for rounded corner in live feed. End---------------
-
-
-#         buf.unmap(map_info)
-#         return self.Gst.FlowReturn.OK
-
-#     def closeEvent(self, event):
-#         self.pipeline.set_state(self.Gst.State.NULL)
-#         super().closeEvent(event)
-
-
 class LiveFeedWidget(QWidget):
-    new_frame = pyqtSignal(QImage)   # <-- Qt-safe signal
+    new_frame = pyqtSignal(QImage)   # Qt-safe signal
 
     def __init__(self):
         super().__init__()
@@ -176,13 +232,17 @@ class LiveFeedWidget(QWidget):
 
     def gst_step(self):
         bus = self.pipeline.get_bus()
-        msg = bus.poll(self.Gst.MessageType.ANY, 0)
+        _ = bus.poll(self.Gst.MessageType.ANY, 0)
 
     def on_new_sample(self, sink):
         # This is running on GStreamer thread
         sample = sink.emit("pull-sample")
         buf = sample.get_buffer()
         caps = sample.get_caps()
+        global video_streamer_width, video_streamer_Height
+        video_streamer_width = caps.get_structure(0).get_value("width")
+        video_streamer_Height = caps.get_structure(0).get_value("height")
+        
         w = caps.get_structure(0).get_value("width")
         h = caps.get_structure(0).get_value("height")
 
@@ -205,12 +265,7 @@ class LiveFeedWidget(QWidget):
         return self.Gst.FlowReturn.OK
 
     def update_gui_frame(self, qimg):
-        # Now in Qt main thread → safe to draw
-
-
-        # self.video_label.setPixmap(QPixmap.fromImage(qimg)) # uncomment if rectangular 
-
-        # code for rounded corner in live feed. Start------------
+        # Rounded corners
         pix = QPixmap.fromImage(qimg)
         rounded = QPixmap(pix.size())
         rounded.fill(Qt.transparent)
@@ -224,7 +279,6 @@ class LiveFeedWidget(QWidget):
         p.end()
 
         self.video_label.setPixmap(rounded)
-        # code for rounded corner in live feed. End---------------
 
     def closeEvent(self, event):
         self.pipeline.set_state(self.Gst.State.NULL)
@@ -245,7 +299,7 @@ class MapViewWidget(QWidget):
         self.ry = 0
         self.yaw = 0
 
-        # --- Status Overlay ---
+        # Status Overlay
         self.status = QLabel("Connecting to ROS…")
         self.status.setAlignment(Qt.AlignCenter)
         self.status.setStyleSheet("""
@@ -254,13 +308,13 @@ class MapViewWidget(QWidget):
         """)
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(0,0,0,0)
+        layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.status)
 
     def set_status(self, text):
         self.status.setText(text)
         self.status.show()
-        self.rotated_pixmap = None   # force paintEvent to skip drawing map
+        self.rotated_pixmap = None
         self.update()
 
     # Called once when map arrives
@@ -281,7 +335,7 @@ class MapViewWidget(QWidget):
         for y in range(height):
             base = y * width
             for x in range(width):
-                v = data[base+x]
+                v = data[base + x]
                 if v == -1:
                     pix = 127
                 elif v == 0:
@@ -297,7 +351,7 @@ class MapViewWidget(QWidget):
         t.rotate(-90)
         pm = pixmap.transformed(t, Qt.SmoothTransformation)
         flip = QTransform()
-        flip.scale(-1,1)
+        flip.scale(-1, 1)
         self.rotated_pixmap = pm.transformed(flip)
 
         self.resolution = map_info["resolution"]
@@ -306,7 +360,6 @@ class MapViewWidget(QWidget):
 
         print("[Map] Ready, rotated size =", self.rotated_pixmap.size())
 
-        # Map ready
         self.status.hide()
         self.update()
 
@@ -320,7 +373,6 @@ class MapViewWidget(QWidget):
         super().paintEvent(event)
 
         if self.rotated_pixmap is None:
-            # Only status label is shown
             return
 
         painter = QPainter(self)
@@ -344,6 +396,7 @@ class MapViewWidget(QWidget):
 
         px_rot = (map_w - 1) - py_map
         py_rot = (map_h - 1) - px_map
+        #py_rot = px_map
 
         sx = scaled.width() / map_w
         sy = scaled.height() / map_h
@@ -364,7 +417,6 @@ class MapViewWidget(QWidget):
         painter.setPen(Qt.NoPen)
         painter.drawPolygon(arrow)
         painter.restore()
-
 
 
 # ---------------------- Telemetry Text -------------------------
@@ -507,7 +559,7 @@ class JoystickWidget(QWidget):
             b.setAutoRaise(False)
             b.setCheckable(False)
 
-            # Press & hold (using signals)
+            # Press & hold
             b.pressed.connect(lambda c=cmd: self.callback(c))
             b.released.connect(lambda: self.callback("stop"))
 
@@ -570,12 +622,14 @@ class MainWindow(QWidget):
         self.resize(1300, 850)
         self.setup_styles()
 
-        # Connect with ROS-Bridge
+        # Connect with ROS-Bridge (for teleop)
         init_connection()
 
         # Telemetry backend (rosbridge)
         from telemetry import Telemetry
         self.telemetry = Telemetry()
+        self._last_nav_code = None
+
         self._map_loaded_from_telemetry = False
 
         # Poll telemetry in GUI thread
@@ -590,10 +644,73 @@ class MainWindow(QWidget):
         self.teleop_timer = QTimer(self)
         self.teleop_timer.timeout.connect(self.publish_continuous_cmd)
 
-        # ======================================================
-        #                     LIVE FEED BLOCK
-        # ======================================================
+        # Goal sender for navigation dispatch (SHARED ROS CLIENT)
+        self.goal_sender = None
+        if RosGoalSender is not None:
+            try:
+                # Use the SAME Ros connection as telemetry to avoid Twisted conflicts
+                self.goal_sender = RosGoalSender(ros=self.telemetry.ros)
+                print("[Queue] RosGoalSender initialized with shared ROS connection.")
+            except Exception as e:
+                print(f"[Queue] ERROR initializing RosGoalSender: {e}")
+                self.goal_sender = None
+        else:
+            print("[Queue] RosGoalSender not available; dispatch will only update DB.")
 
+        # Database connection
+        self.db_conn = None
+        if psycopg2 is not None:
+            try:
+                self.db_conn = psycopg2.connect(
+                    host=DB_HOST,
+                    port=DB_PORT,
+                    dbname=DB_NAME,
+                    user=DB_USER,
+                    password=DB_PASSWORD
+                )
+                self.db_conn.autocommit = True
+                print("[Queue] Connected to PostgreSQL.")
+            except Exception as e:
+                print(f"[Queue] ERROR connecting to DB: {e}")
+                self.db_conn = None
+        else:
+            print("[Queue] psycopg2 not installed; Delivery Queue disabled.")
+
+        # ----------------- Root Layout with Tabs -----------------
+        root = QVBoxLayout(self)
+        root.setContentsMargins(0, 0, 0, 0)
+        root.setSpacing(0)
+
+        self.tabs = QTabWidget()
+        root.addWidget(self.tabs)
+
+        # Tabs
+        self.control_tab = QWidget()
+        self.queue_tab = QWidget()
+        self.logs_tab = QWidget()
+
+        self.tabs.addTab(self.control_tab, "Control")
+        self.tabs.addTab(self.queue_tab, "Delivery Queue")
+        self.tabs.addTab(self.logs_tab, "Logs")
+
+        # Build each tab
+        self.build_control_tab()
+        self.build_queue_tab()
+        self.build_logs_tab()
+
+        # Queue refresh timer (only if DB OK)
+        if self.db_conn is not None:
+            self.queue_refresh_timer = QTimer(self)
+            self.queue_refresh_timer.timeout.connect(self.refresh_delivery_queue)
+            self.queue_refresh_timer.start(2000)  # every 2 seconds
+        else:
+            self.queue_refresh_timer = None
+
+    # ==========================================================
+    # CONTROL TAB (Your existing UI moved here)
+    # ==========================================================
+    def build_control_tab(self):
+        # LIVE FEED BLOCK
         live_title_row = QHBoxLayout()
         dot = QLabel()
         dot.setObjectName("LiveDot")
@@ -617,10 +734,7 @@ class MainWindow(QWidget):
         live_container.addLayout(live_title_row)
         live_container.addWidget(live_card)
 
-        # ======================================================
-        #                     MAP BLOCK
-        # ======================================================
-
+        # MAP BLOCK
         map_title_row = QHBoxLayout()
         map_title = QLabel("Map View")
         map_title.setObjectName("TitleLabel")
@@ -641,19 +755,13 @@ class MainWindow(QWidget):
         map_container.addLayout(map_title_row)
         map_container.addWidget(map_card)
 
-        # ======================================================
-        #                     TOP ROW
-        # ======================================================
-
+        # TOP ROW
         top_row = QHBoxLayout()
         top_row.setSpacing(24)
         top_row.addLayout(live_container, 3)
         top_row.addLayout(map_container, 3)
 
-        # ======================================================
-        #                     TELEMETRY BLOCK
-        # ======================================================
-
+        # TELEMETRY BLOCK
         tele_title_row = QHBoxLayout()
         tele_title = QLabel("Data")
         tele_title.setObjectName("TitleLabel")
@@ -671,10 +779,7 @@ class MainWindow(QWidget):
         tele_container.addLayout(tele_title_row)
         tele_container.addWidget(tele_card)
 
-        # ======================================================
-        #                    PROJECTION BLOCK
-        # ======================================================
-
+        # PROJECTION BLOCK
         proj_title_row = QHBoxLayout()
         proj_title = QLabel("Projection")
         proj_title.setObjectName("TitleLabel")
@@ -692,48 +797,279 @@ class MainWindow(QWidget):
         proj_container.addLayout(proj_title_row)
         proj_container.addWidget(proj_card)
 
-        # ======================================================
-        #                    JOYSTICK BLOCK
-        # ======================================================
-
+        # JOYSTICK
         joy = JoystickWidget(self.handle_teleop)
 
-        # ======================================================
-        #                      BOTTOM ROW
-        # ======================================================
-
+        # BOTTOM ROW
         bottom_row = QHBoxLayout()
         bottom_row.setSpacing(24)
         bottom_row.addLayout(tele_container, 2)
         bottom_row.addLayout(proj_container, 3)
         bottom_row.addWidget(joy, 3)
 
-        # ======================================================
-        #                      MAIN LAYOUT
-        # ======================================================
-
-        main = QVBoxLayout(self)
+        # MAIN LAYOUT FOR CONTROL TAB
+        main = QVBoxLayout(self.control_tab)
         main.setContentsMargins(24, 24, 24, 24)
         main.setSpacing(24)
-
         main.addLayout(top_row, 3)
         main.addLayout(bottom_row, 3)
 
-    # ---------------- Telemetry polling in GUI thread ----------------
+    # ==========================================================
+    # DELIVERY QUEUE TAB
+    # ==========================================================
+    def build_queue_tab(self):
+        layout = QVBoxLayout(self.queue_tab)
+        layout.setContentsMargins(24, 24, 24, 24)
+        layout.setSpacing(12)
 
+        header = QLabel("Delivery Queue")
+        header.setStyleSheet("font-size: 20px; font-weight: 600; color: #333;")
+        layout.addWidget(header)
+
+        # 1️⃣ CREATE TABLE FIRST
+        self.queue_table = QTableWidget()
+        self.queue_table.setColumnCount(6)
+        self.queue_table.setHorizontalHeaderLabels(
+            ["Order ID", "Address", "Location", "Status", "Created At", "Actions"]
+        )
+
+        # Column sizes
+        header_view = self.queue_table.horizontalHeader()
+        header_view.setSectionResizeMode(0, QHeaderView.ResizeToContents)  # ID
+        header_view.setSectionResizeMode(1, QHeaderView.Stretch)           # Address
+        header_view.setSectionResizeMode(2, QHeaderView.Stretch)           # Location
+        header_view.setSectionResizeMode(3, QHeaderView.ResizeToContents)  # Status
+        header_view.setSectionResizeMode(4, QHeaderView.ResizeToContents)  # Created
+        header_view.setSectionResizeMode(5, QHeaderView.ResizeToContents)  # Actions
+
+        self.queue_table.setEditTriggers(QTableWidget.NoEditTriggers)
+        self.queue_table.setSelectionBehavior(QTableWidget.SelectRows)
+        self.queue_table.setSelectionMode(QTableWidget.SingleSelection)
+
+        layout.addWidget(self.queue_table)
+
+        if self.db_conn is None:
+            warn = QLabel("Database connection not available. Queue is disabled.")
+            warn.setStyleSheet("color: #b00; font-size:14px;")
+            layout.addWidget(warn)
+
+    def refresh_delivery_queue(self):
+        if self.db_conn is None:
+            return
+
+        try:
+            cur = self.db_conn.cursor()
+            cur.execute("""
+                SELECT id, address, dest_pos_x, dest_pos_y, status, created_at
+                FROM delivery_records
+                WHERE robot_id = %s
+                  AND status IN ('NEW','LOADING','READY','IN_PROGRESS')
+                ORDER BY created_at ASC
+            """, (ROBOT_ID,))
+            rows = cur.fetchall()
+            cur.close()
+        except Exception as e:
+            self.log(f"[Queue] Error fetching records: {e}")
+            return
+
+        self.queue_table.setRowCount(len(rows))
+
+        for row_idx, row in enumerate(rows):
+            order_id, address, dest_x, dest_y, status, created_at = row
+
+            # Column 0: ID
+            self.queue_table.setItem(row_idx, 0, QTableWidgetItem(str(order_id)))
+
+            # Column 1: Address
+            self.queue_table.setItem(row_idx, 1, QTableWidgetItem(address or ""))
+
+            # Column 2: Location (address preferred, else coords, else Unknown)
+            if address and address.strip():
+                loc_str = address.strip()
+            else:
+                try:
+                    if dest_x is not None and dest_y is not None:
+                        loc_str = f"{float(dest_x):.2f}, {float(dest_y):.2f}"
+                    else:
+                        loc_str = "Unknown"
+                except Exception:
+                    loc_str = "Unknown"
+            self.queue_table.setItem(row_idx, 2, QTableWidgetItem(loc_str))
+
+            # Column 3: Status
+            self.queue_table.setItem(row_idx, 3, QTableWidgetItem(status or ""))
+
+            # Column 4: Created datetime
+            created_str = str(created_at) if created_at else ""
+            self.queue_table.setItem(row_idx, 4, QTableWidgetItem(created_str))
+
+            # Column 5: Actions
+            actions_widget = QWidget()
+            h = QHBoxLayout(actions_widget)
+            h.setContentsMargins(0, 0, 0, 0)
+            h.setSpacing(6)
+            h.addStretch()
+
+            # Buttons depending on status
+            if status == "NEW":
+                btn_start = QPushButton("Start Loading")
+                btn_start.setObjectName("QueueButton")
+                btn_start.setFixedHeight(30)
+                btn_start.clicked.connect(
+                    lambda _, oid=order_id: self.set_order_status(oid, "LOADING")
+                )
+                h.addWidget(btn_start)
+
+            elif status == "LOADING":
+                btn_ready = QPushButton("Mark Loaded")
+                btn_ready.setObjectName("QueueButton")
+                btn_ready.setFixedHeight(30)
+                btn_ready.clicked.connect(
+                    lambda _, oid=order_id: self.set_order_status(oid, "READY")
+                )
+                h.addWidget(btn_ready)
+
+            elif status == "READY":
+                btn_dispatch = QPushButton("Dispatch")
+                btn_dispatch.setObjectName("QueueButton")
+                btn_dispatch.setFixedHeight(30)
+                btn_dispatch.clicked.connect(
+                    lambda _, oid=order_id, x=dest_x, y=dest_y: self.dispatch_order(oid, x, y)
+                )
+                h.addWidget(btn_dispatch)
+
+            elif status == "IN_PROGRESS":
+                btn_delivered = QPushButton("Mark Delivered")
+                btn_delivered.setObjectName("QueueButton")
+                btn_delivered.setFixedHeight(30)
+                btn_delivered.clicked.connect(
+                    lambda _, oid=order_id: self.set_order_status(oid, "DELIVERED")
+                )
+                h.addWidget(btn_delivered)
+
+            h.addStretch()
+            self.queue_table.setCellWidget(row_idx, 5, actions_widget)
+
+    def set_order_status(self, order_id, new_status):
+        if self.db_conn is None:
+            QMessageBox.warning(self, "DB Error", "Database connection not available.")
+            return
+
+        try:
+            cur = self.db_conn.cursor()
+            cur.execute("""
+                UPDATE delivery_records
+                SET status = %s,
+                    last_updated_at = CURRENT_TIMESTAMP
+                WHERE id = %s
+            """, (new_status, order_id))
+            cur.close()
+            self.log(f"[Queue] Order {order_id} → {new_status}")
+            self.refresh_delivery_queue()
+        except Exception as e:
+            self.log(f"[Queue] Error updating order {order_id} to {new_status}: {e}")
+            QMessageBox.critical(self, "DB Error", str(e))
+
+    def dispatch_order(self, order_id, dest_x, dest_y):
+        if self.db_conn is None:
+            QMessageBox.warning(self, "DB Error", "Database connection not available.")
+            return
+
+        # Check if robot already has an IN_PROGRESS job
+        try:
+            cur = self.db_conn.cursor()
+            cur.execute("""
+                SELECT COUNT(*) FROM delivery_records
+                WHERE robot_id = %s AND status = 'IN_PROGRESS'
+            """, (ROBOT_ID,))
+            (count,) = cur.fetchone()
+            cur.close()
+        except Exception as e:
+            self.log(f"[Queue] Error checking active jobs: {e}")
+            QMessageBox.critical(self, "DB Error", str(e))
+            return
+
+        if count > 0:
+            QMessageBox.information(
+                self,
+                "Robot Busy",
+                "Robot already has an active delivery (IN_PROGRESS)."
+            )
+            return
+
+        # Convert dests to float to avoid Decimal JSON issues
+        try:
+            x = float(dest_x) if dest_x is not None else 0.0
+            y = float(dest_y) if dest_y is not None else 0.0
+        except Exception:
+            x, y = 0.0, 0.0
+
+        yaw_deg = 0.0  # simple default; you can calculate based on path if needed
+
+        # Send goal via RosGoalSender (shared rosbridge)
+        if self.goal_sender is not None:
+            try:
+                self.log(f"[Queue] Dispatching order {order_id} → x={x:.2f}, y={y:.2f}, yaw={yaw_deg:.1f}")
+                self.goal_sender.send_goal(x, y, yaw_deg)
+            except Exception as e:
+                self.log(f"[Queue] ERROR dispatching goal for order {order_id}: {e}")
+                QMessageBox.critical(self, "Dispatch Error", str(e))
+                return
+        else:
+            self.log(f"[Queue] dispatch_order: RosGoalSender not available; only updating DB.")
+
+        # Update order status to IN_PROGRESS
+        try:
+            cur = self.db_conn.cursor()
+            cur.execute("""
+                UPDATE delivery_records
+                SET status = 'IN_PROGRESS',
+                    last_updated_at = CURRENT_TIMESTAMP
+                WHERE id = %s
+            """, (order_id,))
+            cur.close()
+            self.refresh_delivery_queue()
+        except Exception as e:
+            self.log(f"[Queue] Error setting order {order_id} to IN_PROGRESS: {e}")
+            QMessageBox.critical(self, "DB Error", str(e))
+
+    # ==========================================================
+    # LOGS TAB
+    # ==========================================================
+    def build_logs_tab(self):
+        layout = QVBoxLayout(self.logs_tab)
+        layout.setContentsMargins(24, 24, 24, 24)
+        layout.setSpacing(12)
+
+        header = QLabel("System Logs")
+        header.setStyleSheet("font-size: 20px; font-weight: 600; color: #333;")
+        layout.addWidget(header)
+
+        self.logs_output = QTextEdit()
+        self.logs_output.setReadOnly(True)
+        self.logs_output.setStyleSheet("""
+            QTextEdit {
+                background: #F7F8FA;
+                border-radius: 12px;
+                padding: 8px;
+            }
+        """)
+        layout.addWidget(self.logs_output)
+
+    def log(self, text):
+        """Append a line to the Logs tab."""
+        if hasattr(self, "logs_output") and self.logs_output is not None:
+            ts = datetime.now().strftime("%H:%M:%S")
+            self.logs_output.append(f"[{ts}] {text}")
+        else:
+            print(text)
+
+    # ==========================================================
+    # TELEMETRY polling in GUI thread
+    # ==========================================================
     def refresh_telemetry_from_ros(self):
-
-        # map load
-        # if not self._map_loaded_from_telemetry:
-        #     map_info, map_data = self.telemetry.get_map()
-        #     if map_info is not None:
-        #         print("[Main] Loading map now...")
-        #         self.map_widget.load_from_occupancy(map_info, map_data)
-        #         self._map_loaded_from_telemetry = True
-
-
+        # Map load
         if not self._map_loaded_from_telemetry:
-            # Update status in map card
             if not self.telemetry.ros.is_connected:
                 self.map_widget.set_status("Connecting to ROS…")
                 return
@@ -750,8 +1086,7 @@ class MainWindow(QWidget):
             self.map_widget.load_from_occupancy(map_info, map_data)
             self._map_loaded_from_telemetry = True
 
-
-        # pose update
+        # Pose update
         pose = self.telemetry.get_pose()
         if pose:
             x, y, yaw, speed = pose
@@ -760,8 +1095,81 @@ class MainWindow(QWidget):
             tele = self.findChild(TelemetryWidget)
             if tele:
                 tele.text.setText(
-                    f"X: {x:.2f}\nY: {y:.2f}\nYaw: {yaw:.1f}°\nSpeed: {speed:.2f}"
+                    f"X: {x:.2f}\nY: {y:.1f}°\nYaw: {yaw:.1f}°\nSpeed: {speed:.2f}"
                 )
+        
+        self.check_navigation_status()
+
+
+
+    def check_navigation_status(self):
+        msg = self.telemetry.get_nav_status()
+        if not msg:
+            return
+
+        status_list = msg.get("status_list", [])
+        if not status_list:
+            return
+
+        last = status_list[-1]
+        code = last.get("status", -1)
+        text = last.get("text", "")
+
+        # Only react if the status code CHANGED
+        if code == self._last_nav_code:
+            return
+
+        self._last_nav_code = code   # Update state
+
+        # ACTIVE
+        if code == 1:
+            self.log("[Nav] Robot is navigating to the target...")
+
+        # SUCCEEDED
+        elif code == 3:
+            self.log("[Nav] Robot reached its goal!")
+            self.auto_mark_delivered()
+
+        # FAILED
+        elif code in (4, 5):
+            self.log(f"[Nav] Navigation failed: {text}")
+            #self.auto_mark_failed()
+
+
+    
+    def auto_mark_delivered(self):
+        if not self.db_conn:
+            return
+
+        cur = self.db_conn.cursor()
+        cur.execute("""
+            UPDATE delivery_records
+            SET status='DELIVERED',
+                last_updated_at = CURRENT_TIMESTAMP
+            WHERE status='IN_PROGRESS' AND robot_id=%s
+        """, (ROBOT_ID,))
+        cur.close()
+
+        self.refresh_delivery_queue()
+        self.log("[Queue] Active delivery marked as DELIVERED.")
+
+
+    def auto_mark_failed(self):
+        if not self.db_conn:
+            return
+
+        cur = self.db_conn.cursor()
+        cur.execute("""
+            UPDATE delivery_records
+            SET status='FAILED',
+                last_updated_at = CURRENT_TIMESTAMP
+            WHERE status='FAILED' AND robot_id=%s
+        """, (ROBOT_ID,))
+        cur.close()
+
+        self.refresh_delivery_queue()
+        self.log("[Queue] Active delivery marked as FAILED.")
+
 
 
     # ---------------- TELEOP LOGIC --------------------
@@ -791,7 +1199,6 @@ class MainWindow(QWidget):
         elif self.current_cmd == "right":
             send_cmd_vel(0.0, -angular_speed)
         else:
-            # Safety: ensure we don't drift
             send_cmd_vel(0.0, 0.0)
 
     # ---------------- STYLES --------------------
@@ -896,6 +1303,11 @@ class MainWindow(QWidget):
         #TelemetryText:focus {
             outline: none;
             border: none;
+        }
+
+        #QueueButton {
+            padding: 2px 12px;
+            border-radius: 5px;
         }
         """)
 
