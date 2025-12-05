@@ -1,34 +1,35 @@
+endor_bot=# INSERT INTO delivery_records (
+    robot_id,
+    message,
+    videourl,
+    address,
+    inventory_ids,
+    quantity,
+    status,
+    statisfied_level,
+    start_pos_x,
+    start_pos_y,
+    dest_pos_x,
+    dest_pos_y,
+    confirmation_code,
+    created_at,
+    last_updated_at
+)
+VALUES (
+    1,
+    'New order created',   -- optional
+    NULL,                  -- no video yet
+    'Inside LAB',  -- readable address for UI
+    NULL,
+    NULL,
+    'NEW',                 -- REQUIRED for Delivery Queue tab
+    NULL,
+    0.0000,                -- safe defaults
+    0.0000,
+    1,                -- destination X
+    2,                -- destination Y
+    '1058',              -- MUST be unique per (robot_id, status)
+    NOW(),
+    NOW()
+);
 
-[21:28:31] [Queue] Active delivery marked as FAILED.
-[21:28:31] [Nav] Navigation failed: Failed to find a valid plan. Even after executing recovery behaviors.
-[21:28:31] [Queue] Active delivery marked as FAILED.
-[21:28:31] [Nav] Navigation failed: Failed to find a valid plan. Even after executing recovery behaviors.
-[21:28:31] [Queue] Active delivery marked as FAILED.
-[21:28:31] [Nav] Navigation failed: Failed to find a valid plan. Even after executing recovery behaviors.
-[21:28:31] [Queue] Active delivery marked as FAILED.
-[21:28:31] [Nav] Navigation failed: Failed to find a valid plan. Even after executing recovery behaviors.
-[21:28:31] [Queue] Active delivery marked as FAILED.
-[21:28:31] [Nav] Navigation failed: Failed to find a valid plan. Even after executing recovery behaviors.
-[21:28:31] [Queue] Active delivery marked as FAILED.
-[21:28:31] [Nav] Navigation failed: Failed to find a valid plan. Even after executing recovery behaviors.
-[21:28:31] [Queue] Active delivery marked as FAILED.
-[21:28:31] [Nav] Navigation failed: Failed to find a valid plan. Even after executing recovery behaviors.
-[21:28:31] [Queue] Active delivery marked as FAILED.
-[21:28:31] [Nav] Navigation failed: Failed to find a valid plan. Even after executing recovery behaviors.
-[21:28:31] [Queue] Active delivery marked as FAILED.
-[21:28:32] [Nav] Navigation failed: Failed to find a valid plan. Even after executing recovery behaviors.
-[21:28:32] [Queue] Active delivery marked as FAILED.
-[21:28:32] [Nav] Navigation failed: Failed to find a valid plan. Even after executing recovery behaviors.
-[21:28:32] [Queue] Active delivery marked as FAILED.
-[21:28:32] [Nav] Navigation failed: Failed to find a valid plan. Even after executing recovery behaviors.
-[21:28:32] [Queue] Active delivery marked as FAILED.
-[21:28:32] [Nav] Navigation failed: Failed to find a valid plan. Even after executing recovery behaviors.
-[21:28:32] [Queue] Active delivery marked as FAILED.
-[21:28:32] [Nav] Navigation failed: Failed to find a valid plan. Even after executing recovery behaviors.
-[21:28:32] [Queue] Active delivery marked as FAILED.
-[21:28:32] [Nav] Navigation failed: Failed to find a valid plan. Even after executing recovery behaviors.
-[21:28:32] [Queue] Active delivery marked as FAILED.
-[21:28:32] [Nav] Navigation failed: Failed to find a valid plan. Even after executing recovery behaviors.
-[21:28:32] [Queue] Active delivery marked as FAILED.
-[21:28:32] [Nav] Navigation failed: Failed to find a valid plan. Even after executing recovery behaviors.
-[21:28:32] [Queue] Active delivery marked as FAILED.
