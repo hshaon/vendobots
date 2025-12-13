@@ -1,0 +1,6 @@
+python-socketio>=5.11.0
+python-dotenv>=1.0.1
+requests>=2.31.0
+Flask>=3.0.0
+pyngrok>=7.1.0
+opencv-python>=4.10.0.84
