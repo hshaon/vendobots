@@ -1,0 +1,6 @@
+enum AllScreenInProject {
+  ORDERSCREEN,
+  HOMEPAGESCREEN,
+  CARTSCREEN,
+  PAYMENTSCREEN
+}

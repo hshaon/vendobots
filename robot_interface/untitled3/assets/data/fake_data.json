@@ -1,0 +1,100 @@
+{
+  "name": "RoboVend A1",
+  "image_url": "https://example.com/images/robovend_a1.png",
+  "status": "idle",
+  "battery_level": 95,
+  "id": 1,
+  "last_updated": "2025-10-28T17:30:58.494824",
+  "inventory_items": [
+    {
+      "name": "Pepsi",
+      "image_url": "https://www.pepsicopartners.com/medias/300Wx300H-1-11YMAR-1.jpg?context=bWFzdGVyfHJvb3R8MjQxNjB8aW1hZ2UvanBlZ3xhRE5qTDJnd01DOHhNRGMxTlRFNE16TTNPRFEyTWk4ek1EQlhlRE13TUVoZk1TMHhNVmxOUVZJdE1TNXFjR2N8ZTRiYzExZTI4ZDkyNDJmMTU3Yjk0NzIzMzQ2ODRiYWMyZWJkNjhmOThkOWI1ZDI4MDZhOWVlYThkYTM3MjcwZg",
+      "price": 1.45,
+      "quantity": 45,
+      "category": "BEVERAGE",
+      "id": 4,
+      "robot_id": 1
+    },
+    {
+      "name": "Sprite",
+      "image_url": "https://lostanitos.com/cdn/shop/products/Sprite-12-Oz-Case-Of-24_250x.png?v=1600995045",
+      "price": 1.4,
+      "quantity": 40,
+      "category": "BEVERAGE",
+      "id": 5,
+      "robot_id": 1
+    },
+    {
+      "name": "Fanta",
+      "image_url": "https://encrypted-tbn2.gstatic.com/images?q=tbn:ANd9GcQysT4CApJGOROFLI_3dFhPAutm7f56JnsNO2gkxG6VyvgJNIrIJ_7IesJMDNqChfBF4KIEpH-6MKA6r6nlWtsXDb2EBhNbux-mu4ZLqq96",
+      "price": 1.35,
+      "quantity": 35,
+      "category": "BEVERAGE",
+      "id": 6,
+      "robot_id": 1
+    },
+    {
+      "name": "Lays",
+      "image_url": "https://i5.walmartimages.com/seo/Lay-s-Chile-Lim-n-Flavored-Potato-Chips-7-75-Oz_deb6fd57-41b2-43ef-bd62-475248277947.f192eebd275a40e1e8eff36cfb164879.jpeg?odnHeight=768&odnWidth=768&odnBg=FFFFFF",
+      "price": 1.5,
+      "quantity": 50,
+      "category": "SNACK",
+      "id": 9,
+      "robot_id": 1
+    },
+    {
+      "name": "KitKat",
+      "image_url": "https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcQMPVf9cOvfOHjvnSXx6mN5rr00A2G7lyJ7Td0H0X_FitCJCR58PsHD-QhM8ywc4gpKyV0Pj0jdrETZjtIzzXPoNGb2MDzfuzyvykY5JLmqkv4yMYoNbRlH3usCiJQtgej8HZz_RJU&usqp=CAc",
+      "price": 1.6,
+      "quantity": 30,
+      "category": "SNACK",
+      "id": 10,
+      "robot_id": 1
+    },
+    {
+      "name": "M&M",
+      "image_url": "https://encrypted-tbn2.gstatic.com/shopping?q=tbn:ANd9GcQ--vpZFutQDbajmswJLxUdaaXqtjDQowZuw0DUYUW63-TnlatGwVaOkjTvc49SQn87Vi4iHJ0FL2nPjJM_ZgOxxqTCATuLVwDj4285FB0Z8r0U-KpKPlsNb6mPy1iqrekZXG_E5Q4&usqp=CAc",
+      "price": 1.55,
+      "quantity": 35,
+      "category": "SNACK",
+      "id": 11,
+      "robot_id": 1
+    },
+    {
+      "name": "Poca",
+      "image_url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZZBZqX8KetanF9hlHd7I3lhtZtERrDIPtFQ&s",
+      "price": 1.45,
+      "quantity": 40,
+      "category": "SNACK",
+      "id": 8,
+      "robot_id": 1
+    },
+    {
+      "name": "Cheetos",
+      "image_url": "https://i5.walmartimages.com/asr/f6129564-2ad8-41df-8050-e62932f3ef55.b1727e82f6636b01e0b19d130666970e.jpeg",
+      "price": 1.65,
+      "quantity": 25,
+      "category": "SNACK",
+      "id": 12,
+      "robot_id": 1
+    },
+    {
+      "name": "Coca-Cola",
+      "image_url": "https://encrypted-tbn1.gstatic.com/shopping?q=tbn:ANd9GcRocM_e9EeLJWiM6vO46XLVN2A9V99Jl1_es9zS5T7x8ta8PEvGc6c3-9ieeJ29bQ65xTwcitesUO1VCO7kf0MsMnoxwIFIJNbk9QbMUYAKD6SD_f8B2NKCpgHtVrzIid8z3f3iZFaKvwU&usqp=CAc",
+      "price": 1.5,
+      "quantity": 50,
+      "category": "BEVERAGE",
+      "id": 3,
+      "robot_id": 1
+    },
+    {
+      "name": "Mountain Dew",
+      "image_url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTiQxS5EvXUBlACP8a4JF-yaCvRs9WIYEVXnw&s",
+      "price": 1.55,
+      "quantity": 30,
+      "category": "BEVERAGE",
+      "id": 7,
+      "robot_id": 1
+    }
+  ]
+}

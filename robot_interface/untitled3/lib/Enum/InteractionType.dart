@@ -1,0 +1,4 @@
+enum InteractionType {
+  VOICE,
+  TOUCHSCREEN
+}

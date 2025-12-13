@@ -1,0 +1,80 @@
+{
+  "products": [
+    {
+      "id": 1,
+      "name": "Drinks",
+      "products": [
+        {
+          "id": 1,
+          "name": "Coca-Colas",
+          "image_url": "https://encrypted-tbn1.gstatic.com/shopping?q=tbn:ANd9GcRocM_e9EeLJWiM6vO46XLVN2A9V99Jl1_es9zS5T7x8ta8PEvGc6c3-9ieeJ29bQ65xTwcitesUO1VCO7kf0MsMnoxwIFIJNbk9QbMUYAKD6SD_f8B2NKCpgHtVrzIid8z3f3iZFaKvwU&usqp=CAc",
+          "price": 1.5,
+          "quantity": 10,
+          "category": "Beverage"
+        },
+        {
+          "id": 2,
+          "name": "Sprite",
+          "image_url": "assets/images/sprite.png",
+          "price": 1.3,
+          "quantity": 6,
+          "category": "Beverage"
+        },
+        {
+          "id": 3,
+          "name": "Fanta",
+          "image_url": "assets/images/fanta.png",
+          "price": 1.2,
+          "quantity": 3,
+          "category": "Beverage"
+        },
+        {
+          "id": 4,
+          "name": "Asahi Beer",
+          "image_url": "assets/images/beer_asahi.png",
+          "price": 2.4,
+          "quantity": 7,
+          "category": "Beverage"
+        },
+        {
+          "id": 5,
+          "name": "Budweiser Beer",
+          "image_url": "assets/images/beer_budweiser.png",
+          "price": 3.8,
+          "quantity": 15,
+          "category": "Beverage"
+        },
+        {
+          "id": 6,
+          "name": "Soju",
+          "image_url": "assets/images/soju.png",
+          "price": 1.89,
+          "quantity": 5,
+          "category": "Beverage"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Snacks",
+      "products": [
+        {
+          "id": 7,
+          "name": "Chuppy",
+          "image_url": "assets/images/bido.png",
+          "price": 2.0,
+          "quantity": 10,
+          "category": "SNACK"
+        },
+        {
+          "id": 8,
+          "name": "Cheese",
+          "image_url": "assets/images/phomat.png",
+          "price": 1.8,
+          "quantity": 10,
+          "category": "SNACK"
+        }
+      ]
+    }
+  ]
+}

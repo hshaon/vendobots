@@ -1,0 +1,4 @@
+enum PaymentActionType {
+  CHANGEADDRESS,
+  DECISION
+}
